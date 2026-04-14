@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LUMINA — 4K Studio Cam</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080a0f;
+    --surface: #0e1117;
+    --panel: #131720;
+    --border: #1e2433;
+    --accent: #e8c87a;
+    --accent2: #7ad4e8;
+    --accent3: #e87ab4;
+    --text: #d4dbe8;
+    --muted: #4a5568;
+    --danger: #e87a7a;
+    --green: #7ae8a8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Noise overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.5;
+  }
+
+  /* ── HEADER ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 36px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    letter-spacing: 6px;
+    color: var(--accent);
+    text-shadow: 0 0 30px rgba(232,200,122,0.4);
+  }
+
+  .logo span { color: var(--text); }
+
+  .status-bar {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    font-size: 0.68rem;
+    letter-spacing: 2px;
+    color: var(--muted);
+  }
+
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--danger);
+    animation: pulse 2s infinite;
+  }
+  .status-dot.live { background: var(--green); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .app {
+    display: grid;
+    grid-template-columns: 260px 1fr 280px;
+    height: calc(100vh - 65px);
+    gap: 0;
+  }
+
+  /* ── LEFT PANEL — EFFECTS ── */
+  .effects-panel {
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 20px 16px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .panel-title {
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 4px;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .effect-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .effect-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 1px;
+  }
+
+  .effect-btn .icon { font-size: 1.4rem; display: block; margin-bottom: 4px; }
+
+  .effect-btn:hover {
+    border-color: var(--accent);
+    background: rgba(232,200,122,0.05);
+    transform: translateY(-2px);
+  }
+
+  .effect-btn.active {
+    border-color: var(--accent);
+    background: rgba(232,200,122,0.1);
+    color: var(--accent);
+    box-shadow: 0 0 16px rgba(232,200,122,0.15);
+  }
+
+  /* Sliders */
+  .slider-group { margin-bottom: 16px; }
+  .slider-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.65rem;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .slider-label span { color: var(--accent); }
+
+  input[type="range"] {
+    width: 100%;
+    -webkit-appearance: none;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px rgba(232,200,122,0.5);
+  }
+
+  /* ── CENTER — VIEWPORT ── */
+  .viewport {
+    position: relative;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  #videoEl {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: filter 0.3s ease;
+  }
+
+  /* HUD overlays */
+  .hud {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .corner {
+    position: absolute;
+    width: 28px; height: 28px;
+    border-color: var(--accent);
+    border-style: solid;
+    opacity: 0.6;
+  }
+  .corner.tl { top: 20px; left: 20px; border-width: 2px 0 0 2px; }
+  .corner.tr { top: 20px; right: 20px; border-width: 2px 2px 0 0; }
+  .corner.bl { bottom: 20px; left: 20px; border-width: 0 0 2px 2px; }
+  .corner.br { bottom: 20px; right: 20px; border-width: 0 2px 2px 0; }
+
+  .res-badge {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(8,10,15,0.75);
+    border: 1px solid var(--border);
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 0.62rem;
+    letter-spacing: 2px;
+    color: var(--accent);
+    backdrop-filter: blur(8px);
+  }
+
+  .grid-overlay {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(232,200,122,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232,200,122,0.04) 1px, transparent 1px);
+    background-size: 33.33% 33.33%;
+    display: none;
+  }
+  .grid-overlay.visible { display: block; }
+
+  /* Flash effect */
+  .flash {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.05s;
+  }
+  .flash.snap { opacity: 1; transition: opacity 0s; }
+  .flash.fade { opacity: 0; transition: opacity 0.4s; }
+
+  /* No camera placeholder */
+  .no-cam {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    text-align: center;
+  }
+  .no-cam.show { display: flex; }
+  .no-cam svg { opacity: 0.2; }
+
+  /* ── CONTROLS BAR ── */
+  .controls {
+    position: absolute;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: rgba(8,10,15,0.85);
+    border: 1px solid var(--border);
+    padding: 12px 24px;
+    border-radius: 60px;
+    backdrop-filter: blur(12px);
+  }
+
+  .ctrl-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 1.3rem;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+  }
+  .ctrl-btn:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+  .ctrl-btn.active { color: var(--accent); }
+
+  .shutter {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 3px solid rgba(255,255,255,0.2);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    box-shadow: 0 0 24px rgba(232,200,122,0.35);
+    position: relative;
+  }
+  .shutter:hover { transform: scale(1.08); box-shadow: 0 0 36px rgba(232,200,122,0.5); }
+  .shutter:active { transform: scale(0.94); }
+  .shutter::after {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border-radius: 50%;
+    border: 2px solid rgba(0,0,0,0.25);
+  }
+
+  /* ── RIGHT PANEL — GALLERY ── */
+  .gallery-panel {
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 20px 16px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .gallery-item {
+    position: relative;
+    aspect-ratio: 16/9;
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+    group: true;
+  }
+
+  .gallery-item:hover { border-color: var(--accent); transform: scale(1.02); }
+
+  .gallery-item img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+
+  .gallery-item .dl-btn {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(8,10,15,0.85);
+    text-align: center;
+    padding: 5px;
+    font-size: 0.6rem;
+    letter-spacing: 1px;
+    color: var(--accent);
+    transform: translateY(100%);
+    transition: transform 0.2s;
+    cursor: pointer;
+    border: none;
+    font-family: 'DM Mono', monospace;
+  }
+  .gallery-item:hover .dl-btn { transform: translateY(0); }
+
+  .gallery-item .effect-tag {
+    position: absolute;
+    top: 5px; left: 5px;
+    background: rgba(8,10,15,0.75);
+    font-size: 0.5rem;
+    letter-spacing: 1px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    color: var(--accent);
+  }
+
+  .empty-gallery {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    padding: 40px 0;
+    line-height: 2;
+  }
+
+  .photo-count {
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    color: var(--muted);
+  }
+  .photo-count strong { color: var(--accent); }
+
+  /* Timer indicator */
+  .timer-ring {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 8rem;
+    color: var(--accent);
+    opacity: 0;
+    text-shadow: 0 0 60px rgba(232,200,122,0.8);
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .timer-ring.show { opacity: 1; }
+
+  /* START button */
+  .start-cam-btn {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    padding: 14px 32px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 16px;
+  }
+  .start-cam-btn:hover { transform: scale(1.04); box-shadow: 0 0 24px rgba(232,200,122,0.3); }
+
+  /* Resolution selector */
+  .res-select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 1px;
+    outline: none;
+    cursor: pointer;
+    margin-bottom: 12px;
+    width: 100%;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .app { grid-template-columns: 1fr; grid-template-rows: auto 50vh auto; }
+    .effects-panel, .gallery-panel { height: auto; max-height: 200px; }
+  }
+
+  /* FPS counter */
+  .fps-badge {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(8,10,15,0.75);
+    border: 1px solid var(--border);
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+    color: var(--green);
+    backdrop-filter: blur(8px);
+  }
+
+  /* Scanline effect */
+  #videoEl.scanlines::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.15) 2px,
+      rgba(0,0,0,0.15) 4px
+    );
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">LUMINA <span>STUDIO</span></div>
+  <div class="status-bar">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusText">OFFLINE</span>
+    <span>·</span>
+    <span id="resText">— × —</span>
+    <span>·</span>
+    <span id="fpsDisp">0 FPS</span>
+  </div>
+</header>
+
+<div class="app">
+
+  <!-- LEFT: EFFECTS -->
+  <div class="effects-panel">
+    <div class="panel-title">HIỆU ỨNG</div>
+
+    <div class="effect-grid" id="effectGrid">
+      <button class="effect-btn active" data-filter="none" onclick="setEffect(this)">
+        <span class="icon">🎯</span>NORMAL
+      </button>
+      <button class="effect-btn" data-filter="grayscale(100%)" onclick="setEffect(this)">
+        <span class="icon">🎞️</span>MONO
+      </button>
+      <button class="effect-btn" data-filter="sepia(90%) saturate(150%)" onclick="setEffect(this)">
+        <span class="icon">📷</span>VINTAGE
+      </button>
+      <button class="effect-btn" data-filter="invert(100%) hue-rotate(180deg)" onclick="setEffect(this)">
+        <span class="icon">🔄</span>INVERT
+      </button>
+      <button class="effect-btn" data-filter="saturate(300%) contrast(120%)" onclick="setEffect(this)">
+        <span class="icon">🎨</span>VIVID
+      </button>
+      <button class="effect-btn" data-filter="contrast(200%) brightness(80%)" onclick="setEffect(this)">
+        <span class="icon">🌑</span>NOIR
+      </button>
+      <button class="effect-btn" data-filter="hue-rotate(90deg) saturate(200%)" onclick="setEffect(this)">
+        <span class="icon">🟢</span>MATRIX
+      </button>
+      <button class="effect-btn" data-filter="hue-rotate(240deg) saturate(250%) brightness(110%)" onclick="setEffect(this)">
+        <span class="icon">💜</span>CYBER
+      </button>
+      <button class="effect-btn" data-filter="brightness(180%) contrast(50%) saturate(150%)" onclick="setEffect(this)">
+        <span class="icon">✨</span>DREAMY
+      </button>
+      <button class="effect-btn" data-filter="sepia(50%) hue-rotate(-20deg) saturate(200%) contrast(90%)" onclick="setEffect(this)">
+        <span class="icon">🌅</span>GOLDEN
+      </button>
+      <button class="effect-btn" data-filter="hue-rotate(180deg) saturate(300%) brightness(120%)" onclick="setEffect(this)">
+        <span class="icon">🔵</span>NEON
+      </button>
+      <button class="effect-btn" data-filter="grayscale(100%) contrast(200%) brightness(60%)" onclick="setEffect(this)">
+        <span class="icon">💀</span>HARSH
+      </button>
+      <button class="effect-btn" data-filter="saturate(0%) brightness(150%) contrast(80%)" onclick="setEffect(this)">
+        <span class="icon">☁️</span>MIST
+      </button>
+      <button class="effect-btn" data-filter="hue-rotate(320deg) saturate(300%) contrast(110%)" onclick="setEffect(this)">
+        <span class="icon">🌸</span>BLOOM
+      </button>
+      <button class="effect-btn" data-filter="contrast(150%) saturate(50%) brightness(90%) sepia(30%)" onclick="setEffect(this)">
+        <span class="icon">🏛️</span>FILM
+      </button>
+      <button class="effect-btn" data-filter="brightness(200%) contrast(30%) saturate(200%) hue-rotate(45deg)" onclick="setEffect(this)">
+        <span class="icon">🌈</span>PASTEL
+      </button>
+    </div>
+
+    <div class="panel-title">ĐIỀU CHỈNH</div>
+
+    <div class="slider-group">
+      <div class="slider-label">ĐỘ SÁNG <span id="briVal">100%</span></div>
+      <input type="range" id="brightness" min="20" max="200" value="100" oninput="updateAdjust()">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label">TƯƠNG PHẢN <span id="conVal">100%</span></div>
+      <input type="range" id="contrast" min="20" max="300" value="100" oninput="updateAdjust()">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label">BÃO HÒA <span id="satVal">100%</span></div>
+      <input type="range" id="saturation" min="0" max="400" value="100" oninput="updateAdjust()">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label">MỜ <span id="blurVal">0px</span></div>
+      <input type="range" id="blur" min="0" max="20" value="0" oninput="updateAdjust()">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label">XOAY MÀU <span id="hueVal">0°</span></div>
+      <input type="range" id="hue" min="0" max="360" value="0" oninput="updateAdjust()">
+    </div>
+
+    <div class="panel-title" style="margin-top:16px">ĐỘ PHÂN GIẢI</div>
+    <select class="res-select" id="resSelect" onchange="changeResolution()">
+      <option value="4k">4K Ultra (3840×2160)</option>
+      <option value="1440p">2K QHD (2560×1440)</option>
+      <option value="1080p">Full HD (1920×1080)</option>
+      <option value="720p">HD (1280×720)</option>
+    </select>
+  </div>
+
+  <!-- CENTER: VIEWPORT -->
+  <div class="viewport">
+    <video id="videoEl" autoplay playsinline muted></video>
+
+    <div class="no-cam" id="noCam">
+      <svg width="80" height="80" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
+        <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/>
+      </svg>
+      <div>CAMERA CHƯA ĐƯỢC KHỞI ĐỘNG</div>
+      <button class="start-cam-btn" onclick="startCamera()">BẮT ĐẦU CAMERA</button>
+    </div>
+
+    <!-- HUD -->
+    <div class="hud">
+      <div class="corner tl"></div>
+      <div class="corner tr"></div>
+      <div class="corner bl"></div>
+      <div class="corner br"></div>
+      <div class="grid-overlay" id="gridOverlay"></div>
+      <div class="res-badge" id="resBadge">— × — · 0fps</div>
+      <div class="fps-badge" id="fpsBadge">LIVE</div>
+      <div class="flash" id="flash"></div>
+      <div class="timer-ring" id="timerRing">3</div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="controls">
+      <!-- Mirror -->
+      <button class="ctrl-btn" id="mirrorBtn" title="Lật ngang" onclick="toggleMirror()">⟺</button>
+      <!-- Grid -->
+      <button class="ctrl-btn" id="gridBtn" title="Lưới" onclick="toggleGrid()">⊞</button>
+      <!-- Timer -->
+      <button class="ctrl-btn" id="timerBtn" title="Hẹn giờ" onclick="toggleTimer()">⏱</button>
+      <!-- SHUTTER -->
+      <button class="shutter" onclick="capturePhoto()" title="Chụp ảnh">📸</button>
+      <!-- Record hint -->
+      <button class="ctrl-btn" id="camSwitch" title="Đổi camera" onclick="switchCamera()">🔄</button>
+      <!-- Fullscreen -->
+      <button class="ctrl-btn" title="Toàn màn hình" onclick="toggleFullscreen()">⛶</button>
+      <!-- Reset -->
+      <button class="ctrl-btn" title="Đặt lại" onclick="resetAll()">↺</button>
+    </div>
+  </div>
+
+  <!-- RIGHT: GALLERY -->
+  <div class="gallery-panel">
+    <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center">
+      <span>THƯ VIỆN</span>
+      <span class="photo-count"><strong id="photoCount">0</strong> ẢNH</span>
+    </div>
+
+    <div id="emptyGallery" class="empty-gallery">
+      Chưa có ảnh nào<br>Nhấn 📸 để chụp
+    </div>
+
+    <div class="gallery-grid" id="galleryGrid"></div>
+  </div>
+</div>
+
+<canvas id="captureCanvas" style="display:none"></canvas>
+
+<script>
+  const video = document.getElementById('videoEl');
+  const canvas = document.getElementById('captureCanvas');
+  const ctx = canvas.getContext('2d');
+  const noCam = document.getElementById('noCam');
+  const flash = document.getElementById('flash');
+  const timerRing = document.getElementById('timerRing');
+  const gridOverlay = document.getElementById('gridOverlay');
+  const resBadge = document.getElementById('resBadge');
+  const statusDot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+  const resText = document.getElementById('resText');
+  const fpsDisp = document.getElementById('fpsDisp');
+
+  let currentFilter = 'none';
+  let adjustFilter = '';
+  let isMirrored = false;
+  let gridVisible = false;
+  let timerMode = false;
+  let stream = null;
+  let photos = [];
+  let facingMode = 'user';
+  let fpsCount = 0, lastFpsTime = performance.now();
+
+  // FPS tracking
+  function trackFPS() {
+    fpsCount++;
+    const now = performance.now();
+    if (now - lastFpsTime >= 1000) {
+      const fps = Math.round(fpsCount * 1000 / (now - lastFpsTime));
+      fpsDisp.textContent = fps + ' FPS';
+      lastFpsTime = now;
+      fpsCount = 0;
+      if (stream) {
+        const track = stream.getVideoTracks()[0];
+        if (track) {
+          const s = track.getSettings();
+          const w = s.width || 0, h = s.height || 0;
+          resBadge.textContent = `${w} × ${h}  ·  ${fps}fps`;
+          resText.textContent = `${w}×${h}`;
+        }
+      }
+    }
+    requestAnimationFrame(trackFPS);
+  }
+  requestAnimationFrame(trackFPS);
+
+  const resMap = {
+    '4k':    { width: { ideal: 3840 }, height: { ideal: 2160 } },
+    '1440p': { width: { ideal: 2560 }, height: { ideal: 1440 } },
+    '1080p': { width: { ideal: 1920 }, height: { ideal: 1080 } },
+    '720p':  { width: { ideal: 1280 }, height: { ideal: 720 } },
+  };
+
+  async function startCamera() {
+    const resKey = document.getElementById('resSelect').value;
+    const constraints = {
+      video: { ...resMap[resKey], facingMode },
+      audio: false
+    };
+    try {
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      stream = await navigator.mediaDevices.getUserMedia(constraints);
+      video.srcObject = stream;
+      video.style.display = 'block';
+      noCam.classList.remove('show');
+      statusDot.classList.add('live');
+      statusText.textContent = 'LIVE';
+    } catch(e) {
+      noCam.classList.add('show');
+      statusText.textContent = 'NO ACCESS';
+      console.warn('Camera error:', e);
+      // Show placeholder for demo
+      video.style.display = 'none';
+      noCam.querySelector('.start-cam-btn').textContent = 'THỬ LẠI';
+    }
+  }
+
+  async function changeResolution() { if (stream) await startCamera(); }
+  async function switchCamera() {
+    facingMode = facingMode === 'user' ? 'environment' : 'user';
+    if (stream) await startCamera();
+  }
+
+  function setEffect(btn) {
+    document.querySelectorAll('.effect-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    applyFilter();
+  }
+
+  function updateAdjust() {
+    const bri = document.getElementById('brightness').value;
+    const con = document.getElementById('contrast').value;
+    const sat = document.getElementById('saturation').value;
+    const blr = document.getElementById('blur').value;
+    const hue = document.getElementById('hue').value;
+    document.getElementById('briVal').textContent = bri + '%';
+    document.getElementById('conVal').textContent = con + '%';
+    document.getElementById('satVal').textContent = sat + '%';
+    document.getElementById('blurVal').textContent = blr + 'px';
+    document.getElementById('hueVal').textContent = hue + '°';
+    adjustFilter = `brightness(${bri}%) contrast(${con}%) saturate(${sat}%) blur(${blr}px) hue-rotate(${hue}deg)`;
+    applyFilter();
+  }
+
+  function applyFilter() {
+    const base = currentFilter === 'none' ? '' : currentFilter;
+    video.style.filter = [base, adjustFilter].filter(Boolean).join(' ') || 'none';
+    if (isMirrored) video.style.transform = 'scaleX(-1)';
+    else video.style.transform = '';
+  }
+
+  function toggleMirror() {
+    isMirrored = !isMirrored;
+    document.getElementById('mirrorBtn').classList.toggle('active', isMirrored);
+    applyFilter();
+  }
+
+  function toggleGrid() {
+    gridVisible = !gridVisible;
+    gridOverlay.classList.toggle('visible', gridVisible);
+    document.getElementById('gridBtn').classList.toggle('active', gridVisible);
+  }
+
+  function toggleTimer() {
+    timerMode = !timerMode;
+    document.getElementById('timerBtn').classList.toggle('active', timerMode);
+  }
+
+  function capturePhoto() {
+    if (timerMode) {
+      runTimer();
+    } else {
+      snap();
+    }
+  }
+
+  function runTimer() {
+    let count = 3;
+    timerRing.textContent = count;
+    timerRing.classList.add('show');
+    const iv = setInterval(() => {
+      count--;
+      if (count <= 0) {
+        clearInterval(iv);
+        timerRing.classList.remove('show');
+        snap();
+      } else {
+        timerRing.textContent = count;
+      }
+    }, 1000);
+  }
+
+  function snap() {
+    // Flash
+    flash.classList.add('snap');
+    setTimeout(() => {
+      flash.classList.remove('snap');
+      flash.classList.add('fade');
+      setTimeout(() => flash.classList.remove('fade'), 500);
+    }, 80);
+
+    // Draw frame
+    const w = video.videoWidth || 1920;
+    const h = video.videoHeight || 1080;
+    canvas.width = w;
+    canvas.height = h;
+
+    if (isMirrored) {
+      ctx.translate(w, 0);
+      ctx.scale(-1, 1);
+    }
+
+    // Build filter string for canvas
+    const base = currentFilter === 'none' ? '' : currentFilter;
+    ctx.filter = [base, adjustFilter].filter(Boolean).join(' ') || 'none';
+    ctx.drawImage(video, 0, 0, w, h);
+
+    const dataURL = canvas.toDataURL('image/jpeg', 0.95);
+    const effectName = document.querySelector('.effect-btn.active')?.textContent.trim().split('\n').pop().trim() || 'NORMAL';
+
+    addToGallery(dataURL, effectName, w, h);
+  }
+
+  function addToGallery(dataURL, effectName, w, h) {
+    photos.unshift({ dataURL, effectName, w, h });
+    document.getElementById('photoCount').textContent = photos.length;
+    document.getElementById('emptyGallery').style.display = 'none';
+
+    const grid = document.getElementById('galleryGrid');
+    const item = document.createElement('div');
+    item.className = 'gallery-item';
+    item.innerHTML = `
+      <img src="${dataURL}" alt="photo">
+      <span class="effect-tag">${effectName}</span>
+      <button class="dl-btn" onclick="downloadPhoto('${dataURL}', '${effectName}')">↓ TẢI VỀ</button>
+    `;
+    grid.insertBefore(item, grid.firstChild);
+  }
+
+  function downloadPhoto(dataURL, name) {
+    const a = document.createElement('a');
+    a.href = dataURL;
+    a.download = `lumina_${name.toLowerCase()}_${Date.now()}.jpg`;
+    a.click();
+  }
+
+  function toggleFullscreen() {
+    const vp = document.querySelector('.viewport');
+    if (!document.fullscreenElement) vp.requestFullscreen?.();
+    else document.exitFullscreen?.();
+  }
+
+  function resetAll() {
+    currentFilter = 'none';
+    adjustFilter = '';
+    document.querySelectorAll('.effect-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('[data-filter="none"]').classList.add('active');
+    document.getElementById('brightness').value = 100;
+    document.getElementById('contrast').value = 100;
+    document.getElementById('saturation').value = 100;
+    document.getElementById('blur').value = 0;
+    document.getElementById('hue').value = 0;
+    ['briVal','conVal','satVal'].forEach(id => document.getElementById(id).textContent = '100%');
+    document.getElementById('blurVal').textContent = '0px';
+    document.getElementById('hueVal').textContent = '0°';
+    isMirrored = false;
+    document.getElementById('mirrorBtn').classList.remove('active');
+    applyFilter();
+  }
+
+  // Auto-start on load
+  window.onload = () => {
+    noCam.classList.add('show');
+    startCamera();
+  };
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', e => {
+    if (e.code === 'Space') { e.preventDefault(); capturePhoto(); }
+    if (e.code === 'KeyG') toggleGrid();
+    if (e.code === 'KeyM') toggleMirror();
+    if (e.code === 'KeyT') toggleTimer();
+  });
+</script>
+</body>
+</html>
