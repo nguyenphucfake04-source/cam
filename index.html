@@ -3,904 +3,1084 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LUMINA — 4K Studio Cam</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
+<title>LUMINA — AI Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #080a0f;
-    --surface: #0e1117;
-    --panel: #131720;
-    --border: #1e2433;
-    --accent: #e8c87a;
-    --accent2: #7ad4e8;
-    --accent3: #e87ab4;
-    --text: #d4dbe8;
-    --muted: #4a5568;
-    --danger: #e87a7a;
-    --green: #7ae8a8;
-  }
+:root {
+  --bg: #04060b;
+  --surface: #070b13;
+  --panel: #0a0f1a;
+  --panel2: #0d1320;
+  --border: #172030;
+  --accent: #f0cb50;
+  --ag: rgba(240,203,80,0.28);
+  --cyan: #50c8f0;
+  --cg: rgba(80,200,240,0.25);
+  --pink: #f050b4;
+  --green: #50f0a0;
+  --red: #f05050;
+  --rg: rgba(240,80,80,0.25);
+  --text: #c0d0e8;
+  --text2: #70889a;
+  --muted: #304055;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif}
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+/* grain */
+body::before{content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9999;opacity:.6}
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'DM Mono', monospace;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
+/* ── HEADER ── */
+header{display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;height:52px;background:var(--surface);
+  border-bottom:1px solid var(--border);position:relative;z-index:50;flex-shrink:0}
+header::after{content:'';position:absolute;bottom:-1px;left:0;width:35%;height:1px;
+  background:linear-gradient(90deg,var(--accent),transparent)}
 
-  /* Noise overlay */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 999;
-    opacity: 0.5;
-  }
+.logo{font-family:'Bebas Neue';font-size:1.7rem;letter-spacing:7px;
+  background:linear-gradient(135deg,var(--accent) 0%,var(--cyan) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 
-  /* ── HEADER ── */
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 18px 36px;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
+.hd-right{display:flex;align-items:center;gap:10px}
 
-  .logo {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 2rem;
-    letter-spacing: 6px;
-    color: var(--accent);
-    text-shadow: 0 0 30px rgba(232,200,122,0.4);
-  }
+.pill{display:flex;align-items:center;gap:7px;background:var(--panel2);
+  border:1px solid var(--border);border-radius:20px;padding:4px 12px;
+  font-family:'Space Mono';font-size:.58rem;letter-spacing:1px;color:var(--text2)}
+.pill.rec-pill{border-color:rgba(240,80,80,.4);background:rgba(240,80,80,.06);display:none}
+.pill.rec-pill.show{display:flex}
 
-  .logo span { color: var(--text); }
+.dot{width:6px;height:6px;border-radius:50%;background:var(--muted)}
+.dot.live{background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 2s infinite}
+.dot.rec-dot{background:var(--red);box-shadow:0 0 6px var(--red);animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
 
-  .status-bar {
-    display: flex;
-    gap: 24px;
-    align-items: center;
-    font-size: 0.68rem;
-    letter-spacing: 2px;
-    color: var(--muted);
-  }
+/* ── LAYOUT ── */
+.app{display:grid;grid-template-columns:240px 1fr 256px;height:calc(100vh - 52px)}
 
-  .status-dot {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--danger);
-    animation: pulse 2s infinite;
-  }
-  .status-dot.live { background: var(--green); }
+/* ── SIDE PANELS ── */
+.sp{overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+  display:flex;flex-direction:column;background:var(--panel)}
+.sp.left{border-right:1px solid var(--border)}
+.sp.right{border-left:1px solid var(--border)}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.8); }
-  }
+.sec{padding:14px 13px;border-bottom:1px solid var(--border)}
+.sec-t{font-family:'Space Mono';font-size:.56rem;letter-spacing:3px;color:var(--muted);
+  margin-bottom:11px;display:flex;align-items:center;gap:8px}
+.sec-t::after{content:'';flex:1;height:1px;background:var(--border)}
 
-  /* ── MAIN LAYOUT ── */
-  .app {
-    display: grid;
-    grid-template-columns: 260px 1fr 280px;
-    height: calc(100vh - 65px);
-    gap: 0;
-  }
+/* Effects grid */
+.fx-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.fx-btn{background:var(--panel2);border:1px solid var(--border);border-radius:6px;
+  padding:8px 5px 7px;cursor:pointer;color:var(--text2);font-family:'Space Mono';
+  font-size:.53rem;letter-spacing:1.5px;text-align:center;transition:all .15s;line-height:1.7}
+.fx-btn .ei{font-size:1.15rem;display:block}
+.fx-btn:hover{border-color:rgba(240,203,80,.4);background:rgba(240,203,80,.04);color:var(--accent);transform:translateY(-1px)}
+.fx-btn.on{border-color:var(--accent);background:rgba(240,203,80,.07);color:var(--accent);
+  box-shadow:0 0 10px rgba(240,203,80,.1),inset 0 0 6px rgba(240,203,80,.04)}
 
-  /* ── LEFT PANEL — EFFECTS ── */
-  .effects-panel {
-    background: var(--panel);
-    border-right: 1px solid var(--border);
-    overflow-y: auto;
-    padding: 20px 16px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-  }
+/* Sliders */
+.sl-row{margin-bottom:12px}
+.sl-hd{display:flex;justify-content:space-between;margin-bottom:5px}
+.sl-nm{font-family:'Space Mono';font-size:.57rem;letter-spacing:1.5px;color:var(--text2)}
+.sl-vl{font-family:'Space Mono';font-size:.57rem;color:var(--accent);min-width:38px;text-align:right}
+.sl-vl.cy{color:var(--cyan)}
+input[type=range]{width:100%;height:2px;-webkit-appearance:none;background:var(--border);
+  border-radius:1px;cursor:pointer;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;
+  border-radius:50%;background:var(--accent);box-shadow:0 0 5px var(--ag);transition:transform .1s}
+input[type=range].cy::-webkit-slider-thumb{background:var(--cyan);box-shadow:0 0 5px var(--cg)}
+input[type=range]::-webkit-slider-thumb:active{transform:scale(1.4)}
 
-  .panel-title {
-    font-family: 'Bebas Neue', sans-serif;
-    letter-spacing: 4px;
-    font-size: 0.85rem;
-    color: var(--muted);
-    margin-bottom: 16px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--border);
-  }
+/* Toggle */
+.tg-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.tg-lbl{font-family:'Space Mono';font-size:.58rem;letter-spacing:.5px;color:var(--text2);
+  display:flex;align-items:center;gap:5px;cursor:pointer}
+.toggle{width:34px;height:18px;background:var(--border);border-radius:9px;
+  cursor:pointer;position:relative;transition:background .2s;border:1px solid var(--muted);flex-shrink:0}
+.toggle.on{background:rgba(80,240,160,.15);border-color:var(--green)}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:10px;height:10px;
+  border-radius:50%;background:var(--muted);transition:all .2s}
+.toggle.on::after{left:19px;background:var(--green);box-shadow:0 0 4px var(--green)}
 
-  .effect-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 24px;
-  }
+select{width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);
+  padding:7px 10px;font-family:'Space Mono';font-size:.58rem;letter-spacing:1px;
+  border-radius:5px;outline:none;cursor:pointer}
+select:focus{border-color:rgba(240,203,80,.4)}
 
-  .effect-btn {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: center;
-    color: var(--text);
-    font-family: 'DM Mono', monospace;
-    font-size: 0.62rem;
-    letter-spacing: 1px;
-  }
+/* ── VIEWPORT ── */
+.viewport{position:relative;background:#000;overflow:hidden;
+  display:flex;align-items:center;justify-content:center}
 
-  .effect-btn .icon { font-size: 1.4rem; display: block; margin-bottom: 4px; }
+#videoEl{width:100%;height:100%;object-fit:contain;
+  transition:filter .3s,transform .3s;transform-style:preserve-3d}
 
-  .effect-btn:hover {
-    border-color: var(--accent);
-    background: rgba(232,200,122,0.05);
-    transform: translateY(-2px);
-  }
+#poseCanvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 
-  .effect-btn.active {
-    border-color: var(--accent);
-    background: rgba(232,200,122,0.1);
-    color: var(--accent);
-    box-shadow: 0 0 16px rgba(232,200,122,0.15);
-  }
+/* Fall overlay */
+.fall-ov{position:absolute;inset:0;background:rgba(240,80,80,.1);
+  border:2px solid var(--red);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;opacity:0;pointer-events:none;
+  transition:opacity .3s;z-index:20}
+.fall-ov.show{opacity:1}
+.fall-txt{font-family:'Bebas Neue';font-size:3.2rem;color:var(--red);letter-spacing:6px;
+  text-shadow:0 0 30px var(--red);animation:shk .35s infinite}
+.fall-sub{font-family:'Space Mono';font-size:.65rem;color:var(--red);
+  letter-spacing:3px;opacity:.75;margin-top:8px}
+@keyframes shk{0%,100%{transform:translateX(0)}33%{transform:translateX(-5px)}66%{transform:translateX(5px)}}
 
-  /* Sliders */
-  .slider-group { margin-bottom: 16px; }
-  .slider-label {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.65rem;
-    letter-spacing: 1.5px;
-    color: var(--muted);
-    margin-bottom: 6px;
-  }
-  .slider-label span { color: var(--accent); }
+/* No cam */
+.no-cam{position:absolute;inset:0;display:none;flex-direction:column;
+  align-items:center;justify-content:center;gap:14px;color:var(--muted);
+  text-align:center;z-index:10;background:var(--bg)}
+.no-cam.show{display:flex}
+.no-cam .nc-ico{font-size:3.5rem;opacity:.2}
+.no-cam .nc-txt{font-family:'Space Mono';font-size:.65rem;letter-spacing:3px}
+.start-btn{background:var(--accent);color:#000;border:none;padding:11px 26px;
+  font-family:'Bebas Neue';font-size:1rem;letter-spacing:4px;border-radius:4px;
+  cursor:pointer;margin-top:6px;transition:all .2s}
+.start-btn:hover{transform:scale(1.05);box-shadow:0 0 18px var(--ag)}
 
-  input[type="range"] {
-    width: 100%;
-    -webkit-appearance: none;
-    height: 3px;
-    background: var(--border);
-    border-radius: 2px;
-    outline: none;
-    cursor: pointer;
-  }
-  input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 14px; height: 14px;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 8px rgba(232,200,122,0.5);
-  }
+/* HUD */
+.hud{position:absolute;inset:0;pointer-events:none}
+.corner{position:absolute;width:22px;height:22px;border-color:rgba(240,203,80,.45);border-style:solid}
+.corner.tl{top:14px;left:14px;border-width:2px 0 0 2px}
+.corner.tr{top:14px;right:14px;border-width:2px 2px 0 0}
+.corner.bl{bottom:65px;left:14px;border-width:0 0 2px 2px}
+.corner.br{bottom:65px;right:14px;border-width:0 2px 2px 0}
 
-  /* ── CENTER — VIEWPORT ── */
-  .viewport {
-    position: relative;
-    background: #000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-  }
+.grid-ov{position:absolute;inset:0;
+  background-image:linear-gradient(rgba(240,203,80,.05) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(240,203,80,.05) 1px,transparent 1px);
+  background-size:33.33% 33.33%;display:none}
+.grid-ov.show{display:block}
 
-  #videoEl {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    transition: filter 0.3s ease;
-  }
+.hud-btm{position:absolute;bottom:62px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:8px;pointer-events:none}
+.res-tag{background:rgba(4,6,11,.82);border:1px solid var(--border);
+  padding:4px 11px;border-radius:20px;font-family:'Space Mono';
+  font-size:.56rem;letter-spacing:1.5px;color:var(--cyan);backdrop-filter:blur(8px)}
+.rec-tag{background:rgba(240,80,80,.12);border:1px solid rgba(240,80,80,.4);
+  padding:4px 11px;border-radius:20px;font-family:'Space Mono';
+  font-size:.56rem;letter-spacing:1.5px;color:var(--red);display:none;
+  align-items:center;gap:5px}
+.rec-tag.show{display:flex}
 
-  /* HUD overlays */
-  .hud {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-  }
+/* Flash */
+.flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:30;transition:opacity 0s}
 
-  .corner {
-    position: absolute;
-    width: 28px; height: 28px;
-    border-color: var(--accent);
-    border-style: solid;
-    opacity: 0.6;
-  }
-  .corner.tl { top: 20px; left: 20px; border-width: 2px 0 0 2px; }
-  .corner.tr { top: 20px; right: 20px; border-width: 2px 2px 0 0; }
-  .corner.bl { bottom: 20px; left: 20px; border-width: 0 0 2px 2px; }
-  .corner.br { bottom: 20px; right: 20px; border-width: 0 2px 2px 0; }
+/* Timer */
+.timer-disp{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue';font-size:11rem;color:var(--accent);pointer-events:none;
+  opacity:0;z-index:25;filter:drop-shadow(0 0 40px rgba(240,203,80,.8));transition:opacity .2s}
+.timer-disp.show{opacity:1}
 
-  .res-badge {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(8,10,15,0.75);
-    border: 1px solid var(--border);
-    padding: 5px 14px;
-    border-radius: 20px;
-    font-size: 0.62rem;
-    letter-spacing: 2px;
-    color: var(--accent);
-    backdrop-filter: blur(8px);
-  }
+/* AI loading badge */
+.ai-badge{position:absolute;top:14px;right:14px;background:rgba(4,6,11,.88);
+  border:1px solid var(--border);padding:5px 13px;border-radius:20px;
+  font-family:'Space Mono';font-size:.56rem;letter-spacing:1px;color:var(--cyan);
+  backdrop-filter:blur(10px);display:none;align-items:center;gap:6px}
+.ai-badge.show{display:flex}
+.ai-badge::before{content:'';width:6px;height:6px;border-radius:50%;
+  border:1.5px solid var(--cyan);border-top-color:transparent;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-  .grid-overlay {
-    position: absolute;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(232,200,122,0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(232,200,122,0.04) 1px, transparent 1px);
-    background-size: 33.33% 33.33%;
-    display: none;
-  }
-  .grid-overlay.visible { display: block; }
+/* ── CONTROLS BAR ── */
+.ctrl-bar{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:7px;
+  background:rgba(7,11,19,.92);border:1px solid var(--border);
+  padding:9px 16px;border-radius:50px;backdrop-filter:blur(18px);
+  z-index:15;box-shadow:0 8px 32px rgba(0,0,0,.45)}
 
-  /* Flash effect */
-  .flash {
-    position: absolute;
-    inset: 0;
-    background: #fff;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.05s;
-  }
-  .flash.snap { opacity: 1; transition: opacity 0s; }
-  .flash.fade { opacity: 0; transition: opacity 0.4s; }
+.c-btn{background:none;border:none;cursor:pointer;color:var(--text2);
+  font-size:1.05rem;width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;transition:all .15s}
+.c-btn:hover{background:rgba(255,255,255,.06);color:var(--text)}
+.c-btn.on{color:var(--accent)}
+.c-div{width:1px;height:22px;background:var(--border)}
 
-  /* No camera placeholder */
-  .no-cam {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-    color: var(--muted);
-    font-size: 0.8rem;
-    letter-spacing: 2px;
-    text-align: center;
-  }
-  .no-cam.show { display: flex; }
-  .no-cam svg { opacity: 0.2; }
+.shutter{width:52px;height:52px;border-radius:50%;
+  background:radial-gradient(circle at 40% 35%,#f7df7a,#d4a820);
+  border:3px solid rgba(255,255,255,.14);cursor:pointer;transition:all .15s;
+  display:flex;align-items:center;justify-content:center;font-size:1.15rem;
+  box-shadow:0 0 18px rgba(240,203,80,.35),0 4px 12px rgba(0,0,0,.5);position:relative}
+.shutter:hover{transform:scale(1.09);box-shadow:0 0 30px rgba(240,203,80,.55),0 4px 16px rgba(0,0,0,.5)}
+.shutter:active{transform:scale(0.92)}
+.shutter::after{content:'';position:absolute;inset:5px;border-radius:50%;border:1.5px solid rgba(0,0,0,.2)}
 
-  /* ── CONTROLS BAR ── */
-  .controls {
-    position: absolute;
-    bottom: 60px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    background: rgba(8,10,15,0.85);
-    border: 1px solid var(--border);
-    padding: 12px 24px;
-    border-radius: 60px;
-    backdrop-filter: blur(12px);
-  }
+.rec-btn{width:42px;height:42px;border-radius:50%;
+  background:rgba(240,80,80,.08);border:2px solid rgba(240,80,80,.35);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:.95rem;color:var(--red);transition:all .15s}
+.rec-btn:hover{background:rgba(240,80,80,.14);border-color:var(--red)}
+.rec-btn.recording{background:rgba(240,80,80,.18);border-color:var(--red);
+  box-shadow:0 0 14px rgba(240,80,80,.3);animation:rp 1.2s infinite}
+@keyframes rp{0%,100%{box-shadow:0 0 14px rgba(240,80,80,.3)}50%{box-shadow:0 0 26px rgba(240,80,80,.6)}}
 
-  .ctrl-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--muted);
-    font-size: 1.3rem;
-    padding: 8px;
-    border-radius: 50%;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-  }
-  .ctrl-btn:hover { color: var(--text); background: rgba(255,255,255,0.05); }
-  .ctrl-btn.active { color: var(--accent); }
+/* ── RIGHT PANEL ── */
+.ai-card{background:var(--panel2);border:1px solid var(--border);border-radius:7px;
+  padding:10px 11px;margin-bottom:8px}
+.ai-card-lbl{font-family:'Space Mono';font-size:.52rem;letter-spacing:2px;
+  color:var(--muted);margin-bottom:3px}
+.ai-card-val{font-family:'Bebas Neue';font-size:1.15rem;letter-spacing:2px;color:var(--cyan)}
+.ai-card-val.ok{color:var(--green)}
+.ai-card-val.warn{color:var(--red)}
 
-  .shutter {
-    width: 60px; height: 60px;
-    border-radius: 50%;
-    background: var(--accent);
-    border: 3px solid rgba(255,255,255,0.2);
-    cursor: pointer;
-    transition: all 0.15s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    box-shadow: 0 0 24px rgba(232,200,122,0.35);
-    position: relative;
-  }
-  .shutter:hover { transform: scale(1.08); box-shadow: 0 0 36px rgba(232,200,122,0.5); }
-  .shutter:active { transform: scale(0.94); }
-  .shutter::after {
-    content: '';
-    position: absolute;
-    inset: 4px;
-    border-radius: 50%;
-    border: 2px solid rgba(0,0,0,0.25);
-  }
+.kp-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-top:8px}
+.kp-item{font-family:'Space Mono';font-size:.5rem;color:var(--muted);
+  display:flex;align-items:center;gap:4px}
+.kp-d{width:5px;height:5px;border-radius:50%;background:var(--muted);flex-shrink:0}
+.kp-item.det .kp-d{background:var(--green)}
+.kp-item.det{color:var(--text2)}
 
-  /* ── RIGHT PANEL — GALLERY ── */
-  .gallery-panel {
-    background: var(--panel);
-    border-left: 1px solid var(--border);
-    overflow-y: auto;
-    padding: 20px 16px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-  }
+.gal-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+.g-item{aspect-ratio:16/9;border-radius:5px;overflow:hidden;
+  border:1px solid var(--border);cursor:pointer;position:relative;transition:all .15s}
+.g-item:hover{border-color:rgba(240,203,80,.4);transform:scale(1.02)}
+.g-item img{width:100%;height:100%;object-fit:cover}
+.g-tag{position:absolute;top:4px;left:4px;background:rgba(4,6,11,.82);
+  font-family:'Space Mono';font-size:.45rem;letter-spacing:1px;
+  padding:2px 5px;border-radius:3px;color:var(--accent)}
+.g-tag.vid{background:rgba(240,80,80,.7);color:#fff}
+.g-dl{position:absolute;bottom:0;left:0;right:0;background:rgba(4,6,11,.88);
+  text-align:center;padding:5px;font-family:'Space Mono';font-size:.48rem;
+  color:var(--accent);transform:translateY(100%);transition:transform .15s;
+  border:none;cursor:pointer;letter-spacing:1px;width:100%}
+.g-item:hover .g-dl{transform:translateY(0)}
+.g-vid-thumb{width:100%;height:100%;background:var(--panel2);
+  display:flex;align-items:center;justify-content:center;font-size:1.4rem}
 
-  .gallery-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-top: 12px;
-  }
-
-  .gallery-item {
-    position: relative;
-    aspect-ratio: 16/9;
-    border-radius: 6px;
-    overflow: hidden;
-    cursor: pointer;
-    border: 1px solid var(--border);
-    transition: all 0.2s;
-    group: true;
-  }
-
-  .gallery-item:hover { border-color: var(--accent); transform: scale(1.02); }
-
-  .gallery-item img {
-    width: 100%; height: 100%;
-    object-fit: cover;
-  }
-
-  .gallery-item .dl-btn {
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    background: rgba(8,10,15,0.85);
-    text-align: center;
-    padding: 5px;
-    font-size: 0.6rem;
-    letter-spacing: 1px;
-    color: var(--accent);
-    transform: translateY(100%);
-    transition: transform 0.2s;
-    cursor: pointer;
-    border: none;
-    font-family: 'DM Mono', monospace;
-  }
-  .gallery-item:hover .dl-btn { transform: translateY(0); }
-
-  .gallery-item .effect-tag {
-    position: absolute;
-    top: 5px; left: 5px;
-    background: rgba(8,10,15,0.75);
-    font-size: 0.5rem;
-    letter-spacing: 1px;
-    padding: 2px 6px;
-    border-radius: 3px;
-    color: var(--accent);
-  }
-
-  .empty-gallery {
-    text-align: center;
-    color: var(--muted);
-    font-size: 0.65rem;
-    letter-spacing: 2px;
-    padding: 40px 0;
-    line-height: 2;
-  }
-
-  .photo-count {
-    font-size: 0.65rem;
-    letter-spacing: 2px;
-    color: var(--muted);
-  }
-  .photo-count strong { color: var(--accent); }
-
-  /* Timer indicator */
-  .timer-ring {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 8rem;
-    color: var(--accent);
-    opacity: 0;
-    text-shadow: 0 0 60px rgba(232,200,122,0.8);
-    pointer-events: none;
-    transition: opacity 0.2s;
-  }
-  .timer-ring.show { opacity: 1; }
-
-  /* START button */
-  .start-cam-btn {
-    background: var(--accent);
-    color: var(--bg);
-    border: none;
-    padding: 14px 32px;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1rem;
-    letter-spacing: 4px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-top: 16px;
-  }
-  .start-cam-btn:hover { transform: scale(1.04); box-shadow: 0 0 24px rgba(232,200,122,0.3); }
-
-  /* Resolution selector */
-  .res-select {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.65rem;
-    letter-spacing: 1px;
-    outline: none;
-    cursor: pointer;
-    margin-bottom: 12px;
-    width: 100%;
-  }
-
-  /* Scrollbar */
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-  /* Responsive */
-  @media (max-width: 900px) {
-    .app { grid-template-columns: 1fr; grid-template-rows: auto 50vh auto; }
-    .effects-panel, .gallery-panel { height: auto; max-height: 200px; }
-  }
-
-  /* FPS counter */
-  .fps-badge {
-    position: absolute;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(8,10,15,0.75);
-    border: 1px solid var(--border);
-    padding: 3px 12px;
-    border-radius: 20px;
-    font-size: 0.6rem;
-    letter-spacing: 2px;
-    color: var(--green);
-    backdrop-filter: blur(8px);
-  }
-
-  /* Scanline effect */
-  #videoEl.scanlines::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0,0,0,0.15) 2px,
-      rgba(0,0,0,0.15) 4px
-    );
-  }
+.empty-msg{text-align:center;color:var(--muted);font-family:'Space Mono';
+  font-size:.56rem;letter-spacing:2px;padding:28px 0;line-height:2.8}
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">LUMINA <span>STUDIO</span></div>
-  <div class="status-bar">
-    <div class="status-dot" id="statusDot"></div>
-    <span id="statusText">OFFLINE</span>
-    <span>·</span>
-    <span id="resText">— × —</span>
-    <span>·</span>
-    <span id="fpsDisp">0 FPS</span>
+  <div class="logo">LUMINA AI STUDIO</div>
+  <div class="hd-right">
+    <div class="pill">
+      <div class="dot" id="camDot"></div>
+      <span id="camSt">OFFLINE</span>
+      <span style="color:var(--muted)">·</span>
+      <span id="resDisp">—×—</span>
+      <span style="color:var(--muted)">·</span>
+      <span id="fpsDisp">0fps</span>
+    </div>
+    <div class="pill" id="aiPill">
+      <div class="dot" id="aiDot"></div>
+      <span id="aiSt">AI OFF</span>
+    </div>
+    <div class="pill rec-pill" id="recPill">
+      <div class="dot rec-dot"></div>
+      <span id="recTm">00:00</span>
+    </div>
   </div>
 </header>
 
 <div class="app">
 
-  <!-- LEFT: EFFECTS -->
-  <div class="effects-panel">
-    <div class="panel-title">HIỆU ỨNG</div>
+  <!-- LEFT -->
+  <div class="sp left">
 
-    <div class="effect-grid" id="effectGrid">
-      <button class="effect-btn active" data-filter="none" onclick="setEffect(this)">
-        <span class="icon">🎯</span>NORMAL
-      </button>
-      <button class="effect-btn" data-filter="grayscale(100%)" onclick="setEffect(this)">
-        <span class="icon">🎞️</span>MONO
-      </button>
-      <button class="effect-btn" data-filter="sepia(90%) saturate(150%)" onclick="setEffect(this)">
-        <span class="icon">📷</span>VINTAGE
-      </button>
-      <button class="effect-btn" data-filter="invert(100%) hue-rotate(180deg)" onclick="setEffect(this)">
-        <span class="icon">🔄</span>INVERT
-      </button>
-      <button class="effect-btn" data-filter="saturate(300%) contrast(120%)" onclick="setEffect(this)">
-        <span class="icon">🎨</span>VIVID
-      </button>
-      <button class="effect-btn" data-filter="contrast(200%) brightness(80%)" onclick="setEffect(this)">
-        <span class="icon">🌑</span>NOIR
-      </button>
-      <button class="effect-btn" data-filter="hue-rotate(90deg) saturate(200%)" onclick="setEffect(this)">
-        <span class="icon">🟢</span>MATRIX
-      </button>
-      <button class="effect-btn" data-filter="hue-rotate(240deg) saturate(250%) brightness(110%)" onclick="setEffect(this)">
-        <span class="icon">💜</span>CYBER
-      </button>
-      <button class="effect-btn" data-filter="brightness(180%) contrast(50%) saturate(150%)" onclick="setEffect(this)">
-        <span class="icon">✨</span>DREAMY
-      </button>
-      <button class="effect-btn" data-filter="sepia(50%) hue-rotate(-20deg) saturate(200%) contrast(90%)" onclick="setEffect(this)">
-        <span class="icon">🌅</span>GOLDEN
-      </button>
-      <button class="effect-btn" data-filter="hue-rotate(180deg) saturate(300%) brightness(120%)" onclick="setEffect(this)">
-        <span class="icon">🔵</span>NEON
-      </button>
-      <button class="effect-btn" data-filter="grayscale(100%) contrast(200%) brightness(60%)" onclick="setEffect(this)">
-        <span class="icon">💀</span>HARSH
-      </button>
-      <button class="effect-btn" data-filter="saturate(0%) brightness(150%) contrast(80%)" onclick="setEffect(this)">
-        <span class="icon">☁️</span>MIST
-      </button>
-      <button class="effect-btn" data-filter="hue-rotate(320deg) saturate(300%) contrast(110%)" onclick="setEffect(this)">
-        <span class="icon">🌸</span>BLOOM
-      </button>
-      <button class="effect-btn" data-filter="contrast(150%) saturate(50%) brightness(90%) sepia(30%)" onclick="setEffect(this)">
-        <span class="icon">🏛️</span>FILM
-      </button>
-      <button class="effect-btn" data-filter="brightness(200%) contrast(30%) saturate(200%) hue-rotate(45deg)" onclick="setEffect(this)">
-        <span class="icon">🌈</span>PASTEL
-      </button>
+    <div class="sec">
+      <div class="sec-t">HIỆU ỨNG</div>
+      <div class="fx-grid" id="fxGrid">
+        <button class="fx-btn on" data-f="none" onclick="setFx(this)"><span class="ei">🎯</span>NORMAL</button>
+        <button class="fx-btn" data-f="grayscale(100%)" onclick="setFx(this)"><span class="ei">🎞</span>MONO</button>
+        <button class="fx-btn" data-f="sepia(90%) saturate(150%)" onclick="setFx(this)"><span class="ei">📷</span>VINTAGE</button>
+        <button class="fx-btn" data-f="invert(100%) hue-rotate(180deg)" onclick="setFx(this)"><span class="ei">🔄</span>INVERT</button>
+        <button class="fx-btn" data-f="saturate(300%) contrast(120%)" onclick="setFx(this)"><span class="ei">🎨</span>VIVID</button>
+        <button class="fx-btn" data-f="contrast(200%) brightness(80%)" onclick="setFx(this)"><span class="ei">🌑</span>NOIR</button>
+        <button class="fx-btn" data-f="hue-rotate(90deg) saturate(200%)" onclick="setFx(this)"><span class="ei">🟢</span>MATRIX</button>
+        <button class="fx-btn" data-f="hue-rotate(240deg) saturate(250%) brightness(110%)" onclick="setFx(this)"><span class="ei">💜</span>CYBER</button>
+        <button class="fx-btn" data-f="brightness(180%) contrast(50%) saturate(150%)" onclick="setFx(this)"><span class="ei">✨</span>DREAMY</button>
+        <button class="fx-btn" data-f="sepia(50%) hue-rotate(-20deg) saturate(200%)" onclick="setFx(this)"><span class="ei">🌅</span>GOLDEN</button>
+        <button class="fx-btn" data-f="hue-rotate(180deg) saturate(300%) brightness(120%)" onclick="setFx(this)"><span class="ei">🔵</span>NEON</button>
+        <button class="fx-btn" data-f="grayscale(100%) contrast(200%) brightness(60%)" onclick="setFx(this)"><span class="ei">💀</span>HARSH</button>
+        <button class="fx-btn" data-f="saturate(0%) brightness(150%) contrast(80%)" onclick="setFx(this)"><span class="ei">☁️</span>MIST</button>
+        <button class="fx-btn" data-f="hue-rotate(320deg) saturate(300%) contrast(110%)" onclick="setFx(this)"><span class="ei">🌸</span>BLOOM</button>
+        <button class="fx-btn" data-f="contrast(150%) saturate(50%) brightness(90%) sepia(30%)" onclick="setFx(this)"><span class="ei">🏛</span>FILM</button>
+        <button class="fx-btn" data-f="brightness(200%) contrast(30%) saturate(200%) hue-rotate(45deg)" onclick="setFx(this)"><span class="ei">🌈</span>PASTEL</button>
+      </div>
     </div>
 
-    <div class="panel-title">ĐIỀU CHỈNH</div>
+    <div class="sec">
+      <div class="sec-t">ĐIỀU CHỈNH</div>
+      <div class="sl-row">
+        <div class="sl-hd"><span class="sl-nm">ĐỘ SÁNG</span><span class="sl-vl" id="vBri">100%</span></div>
+        <input type="range" id="sBri" min="20" max="200" value="100" oninput="updAdj()">
+      </div>
+      <div class="sl-row">
+        <div class="sl-hd"><span class="sl-nm">TƯƠNG PHẢN</span><span class="sl-vl" id="vCon">100%</span></div>
+        <input type="range" id="sCon" min="20" max="300" value="100" oninput="updAdj()">
+      </div>
+      <div class="sl-row">
+        <div class="sl-hd"><span class="sl-nm">BÃO HÒA</span><span class="sl-vl" id="vSat">100%</span></div>
+        <input type="range" id="sSat" min="0" max="400" value="100" oninput="updAdj()">
+      </div>
+      <div class="sl-row">
+        <div class="sl-hd"><span class="sl-nm">LÀM MỜ</span><span class="sl-vl" id="vBlr">0px</span></div>
+        <input type="range" id="sBlr" min="0" max="20" value="0" oninput="updAdj()">
+      </div>
+      <div class="sl-row">
+        <div class="sl-hd"><span class="sl-nm">XOAY MÀU</span><span class="sl-vl" id="vHue">0°</span></div>
+        <input type="range" id="sHue" min="0" max="360" value="0" oninput="updAdj()">
+      </div>
+    </div>
 
-    <div class="slider-group">
-      <div class="slider-label">ĐỘ SÁNG <span id="briVal">100%</span></div>
-      <input type="range" id="brightness" min="20" max="200" value="100" oninput="updateAdjust()">
-    </div>
-    <div class="slider-group">
-      <div class="slider-label">TƯƠNG PHẢN <span id="conVal">100%</span></div>
-      <input type="range" id="contrast" min="20" max="300" value="100" oninput="updateAdjust()">
-    </div>
-    <div class="slider-group">
-      <div class="slider-label">BÃO HÒA <span id="satVal">100%</span></div>
-      <input type="range" id="saturation" min="0" max="400" value="100" oninput="updateAdjust()">
-    </div>
-    <div class="slider-group">
-      <div class="slider-label">MỜ <span id="blurVal">0px</span></div>
-      <input type="range" id="blur" min="0" max="20" value="0" oninput="updateAdjust()">
-    </div>
-    <div class="slider-group">
-      <div class="slider-label">XOAY MÀU <span id="hueVal">0°</span></div>
-      <input type="range" id="hue" min="0" max="360" value="0" oninput="updateAdjust()">
+    <div class="sec">
+      <div class="sec-t">3D TRANSFORM</div>
+      <div class="sl-row">
+        <div class="sl-hd"><span class="sl-nm">PERSPECTIVE</span><span class="sl-vl cy" id="vPer">800px</span></div>
+        <input type="range" class="cy" id="sPer" min="200" max="2000" value="800" oninput="upd3D()">
+      </div>
+      <div class="sl-row">
+        <div class="sl-hd"><span class="sl-nm">TILT X</span><span class="sl-vl cy" id="vRx">0°</span></div>
+        <input type="range" class="cy" id="sRx" min="-60" max="60" value="0" oninput="upd3D()">
+      </div>
+      <div class="sl-row">
+        <div class="sl-hd"><span class="sl-nm">TILT Y</span><span class="sl-vl cy" id="vRy">0°</span></div>
+        <input type="range" class="cy" id="sRy" min="-60" max="60" value="0" oninput="upd3D()">
+      </div>
+      <div class="sl-row">
+        <div class="sl-hd"><span class="sl-nm">XOAY Z</span><span class="sl-vl cy" id="vRz">0°</span></div>
+        <input type="range" class="cy" id="sRz" min="-45" max="45" value="0" oninput="upd3D()">
+      </div>
+      <div class="sl-row">
+        <div class="sl-hd"><span class="sl-nm">PHÓNG TO</span><span class="sl-vl cy" id="vSc">1.0×</span></div>
+        <input type="range" class="cy" id="sSc" min="50" max="200" value="100" oninput="upd3D()">
+      </div>
+      <div class="fx-grid" style="margin-top:8px">
+        <button class="fx-btn" onclick="p3d('tilt')"><span class="ei">📐</span>TILT</button>
+        <button class="fx-btn" onclick="p3d('dutch')"><span class="ei">🎬</span>DUTCH</button>
+        <button class="fx-btn" onclick="p3d('fisheye')"><span class="ei">🔍</span>FISHEYE</button>
+        <button class="fx-btn" onclick="p3d('flat')"><span class="ei">⬜</span>RESET 3D</button>
+      </div>
     </div>
 
-    <div class="panel-title" style="margin-top:16px">ĐỘ PHÂN GIẢI</div>
-    <select class="res-select" id="resSelect" onchange="changeResolution()">
-      <option value="4k">4K Ultra (3840×2160)</option>
-      <option value="1440p">2K QHD (2560×1440)</option>
-      <option value="1080p">Full HD (1920×1080)</option>
-      <option value="720p">HD (1280×720)</option>
-    </select>
+    <div class="sec">
+      <div class="sec-t">CAMERA</div>
+      <select id="resSel" onchange="changeRes()">
+        <option value="4k">4K Ultra HD (3840×2160)</option>
+        <option value="1440p">2K QHD (2560×1440)</option>
+        <option value="1080p" selected>Full HD (1920×1080)</option>
+        <option value="720p">HD Ready (1280×720)</option>
+      </select>
+    </div>
+
   </div>
 
-  <!-- CENTER: VIEWPORT -->
+  <!-- VIEWPORT -->
   <div class="viewport">
     <video id="videoEl" autoplay playsinline muted></video>
+    <canvas id="poseCanvas"></canvas>
 
-    <div class="no-cam" id="noCam">
-      <svg width="80" height="80" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
-        <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/>
-      </svg>
-      <div>CAMERA CHƯA ĐƯỢC KHỞI ĐỘNG</div>
-      <button class="start-cam-btn" onclick="startCamera()">BẮT ĐẦU CAMERA</button>
+    <div class="fall-ov" id="fallOv">
+      <div class="fall-txt">⚠ NGÃ PHÁT HIỆN!</div>
+      <div class="fall-sub">FALL DETECTED — AI ALERT</div>
     </div>
 
-    <!-- HUD -->
+    <div class="no-cam show" id="noCam">
+      <div class="nc-ico">📹</div>
+      <div class="nc-txt">CAMERA CHƯA KHỞI ĐỘNG</div>
+      <button class="start-btn" onclick="startCam()">BẮT ĐẦU CAMERA</button>
+    </div>
+
     <div class="hud">
       <div class="corner tl"></div>
       <div class="corner tr"></div>
       <div class="corner bl"></div>
       <div class="corner br"></div>
-      <div class="grid-overlay" id="gridOverlay"></div>
-      <div class="res-badge" id="resBadge">— × — · 0fps</div>
-      <div class="fps-badge" id="fpsBadge">LIVE</div>
-      <div class="flash" id="flash"></div>
-      <div class="timer-ring" id="timerRing">3</div>
+      <div class="grid-ov" id="gridOv"></div>
     </div>
 
-    <!-- CONTROLS -->
-    <div class="controls">
-      <!-- Mirror -->
-      <button class="ctrl-btn" id="mirrorBtn" title="Lật ngang" onclick="toggleMirror()">⟺</button>
-      <!-- Grid -->
-      <button class="ctrl-btn" id="gridBtn" title="Lưới" onclick="toggleGrid()">⊞</button>
-      <!-- Timer -->
-      <button class="ctrl-btn" id="timerBtn" title="Hẹn giờ" onclick="toggleTimer()">⏱</button>
-      <!-- SHUTTER -->
-      <button class="shutter" onclick="capturePhoto()" title="Chụp ảnh">📸</button>
-      <!-- Record hint -->
-      <button class="ctrl-btn" id="camSwitch" title="Đổi camera" onclick="switchCamera()">🔄</button>
-      <!-- Fullscreen -->
-      <button class="ctrl-btn" title="Toàn màn hình" onclick="toggleFullscreen()">⛶</button>
-      <!-- Reset -->
-      <button class="ctrl-btn" title="Đặt lại" onclick="resetAll()">↺</button>
+    <div class="hud-btm">
+      <div class="res-tag" id="resBadge">—×— · 0fps</div>
+      <div class="rec-tag" id="recTag">
+        <span style="width:5px;height:5px;border-radius:50%;background:var(--red);animation:blink 1s infinite;display:inline-block"></span>
+        REC
+      </div>
+    </div>
+
+    <div class="flash" id="flash"></div>
+    <div class="timer-disp" id="timerD">3</div>
+    <div class="ai-badge" id="aiBadge">LOADING AI...</div>
+
+    <div class="ctrl-bar">
+      <button class="c-btn" id="btnMirror" title="Lật ngang [M]" onclick="togMirror()">⟺</button>
+      <button class="c-btn" id="btnGrid"   title="Lưới [G]" onclick="togGrid()">⊞</button>
+      <button class="c-btn" id="btnTimer"  title="Hẹn giờ [T]" onclick="togTimer()">⏱</button>
+      <div class="c-div"></div>
+      <button class="shutter" onclick="doSnap()" title="Chụp ảnh [Space]">📸</button>
+      <button class="rec-btn" id="recBtn" onclick="togRec()" title="Quay video [R]">⏺</button>
+      <div class="c-div"></div>
+      <button class="c-btn" onclick="switchCam()" title="Đổi camera">🔄</button>
+      <button class="c-btn" onclick="togFS()" title="Toàn màn hình">⛶</button>
+      <button class="c-btn" onclick="resetAll()" title="Đặt lại tất cả">↺</button>
     </div>
   </div>
 
-  <!-- RIGHT: GALLERY -->
-  <div class="gallery-panel">
-    <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center">
-      <span>THƯ VIỆN</span>
-      <span class="photo-count"><strong id="photoCount">0</strong> ẢNH</span>
+  <!-- RIGHT -->
+  <div class="sp right">
+
+    <div class="sec">
+      <div class="sec-t">AI NHẬN DIỆN</div>
+      <div class="tg-row">
+        <span class="tg-lbl" onclick="togPose()">🦴 NHẬN DIỆN TƯ THẾ</span>
+        <div class="toggle" id="tgPose" onclick="togPose()"></div>
+      </div>
+      <div class="tg-row">
+        <span class="tg-lbl" onclick="togFall()">⚠️ PHÁT HIỆN NGÃ</span>
+        <div class="toggle" id="tgFall" onclick="togFall()"></div>
+      </div>
+      <div class="tg-row">
+        <span class="tg-lbl" onclick="togDots()">🟡 HIỂN THỊ ĐIỂM</span>
+        <div class="toggle" id="tgDots" onclick="togDots()"></div>
+      </div>
+      <div class="tg-row">
+        <span class="tg-lbl" onclick="togSkel()">🔗 HIỂN THỊ XƯƠNG</span>
+        <div class="toggle" id="tgSkel" onclick="togSkel()"></div>
+      </div>
     </div>
 
-    <div id="emptyGallery" class="empty-gallery">
-      Chưa có ảnh nào<br>Nhấn 📸 để chụp
+    <div class="sec" id="aiInfoSec" style="display:none">
+      <div class="sec-t">TRẠNG THÁI AI</div>
+      <div class="ai-card">
+        <div class="ai-card-lbl">SỐ NGƯỜI PHÁT HIỆN</div>
+        <div class="ai-card-val" id="aiPpl">0</div>
+      </div>
+      <div class="ai-card">
+        <div class="ai-card-lbl">TƯ THẾ HIỆN TẠI</div>
+        <div class="ai-card-val ok" id="aiPose">STANDING</div>
+      </div>
+      <div class="ai-card">
+        <div class="ai-card-lbl">GÓC CƠ THỂ</div>
+        <div class="ai-card-val" id="aiAngle">—°</div>
+      </div>
+      <div class="ai-card-lbl" style="margin-top:6px;margin-bottom:6px">ĐIỂM KHỚP PHÁT HIỆN</div>
+      <div class="kp-grid" id="kpGrid"></div>
     </div>
 
-    <div class="gallery-grid" id="galleryGrid"></div>
+    <div class="sec" style="flex:1;min-height:0">
+      <div class="sec-t" style="justify-content:space-between">
+        <span>THƯ VIỆN</span>
+        <span style="font-family:'Space Mono';font-size:.54rem;color:var(--accent)">
+          <span id="galCnt">0</span> MỤC
+        </span>
+      </div>
+      <div id="emptyGal" class="empty-msg">Chưa có gì<br>📸 Chụp · ⏺ Quay</div>
+      <div class="gal-grid" id="galGrid"></div>
+    </div>
+
   </div>
 </div>
 
-<canvas id="captureCanvas" style="display:none"></canvas>
+<canvas id="capCanvas" style="display:none"></canvas>
 
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.1.3/dist/pose-detection.min.js"></script>
 <script>
-  const video = document.getElementById('videoEl');
-  const canvas = document.getElementById('captureCanvas');
-  const ctx = canvas.getContext('2d');
-  const noCam = document.getElementById('noCam');
-  const flash = document.getElementById('flash');
-  const timerRing = document.getElementById('timerRing');
-  const gridOverlay = document.getElementById('gridOverlay');
-  const resBadge = document.getElementById('resBadge');
-  const statusDot = document.getElementById('statusDot');
-  const statusText = document.getElementById('statusText');
-  const resText = document.getElementById('resText');
-  const fpsDisp = document.getElementById('fpsDisp');
+// ══════════════════════════════════════════════
+// GLOBALS
+// ══════════════════════════════════════════════
+const video   = document.getElementById('videoEl');
+const pCv     = document.getElementById('poseCanvas');
+const pCtx    = pCv.getContext('2d');
+const capCv   = document.getElementById('capCanvas');
+const capCtx  = capCv.getContext('2d');
 
-  let currentFilter = 'none';
-  let adjustFilter = '';
-  let isMirrored = false;
-  let gridVisible = false;
-  let timerMode = false;
-  let stream = null;
-  let photos = [];
-  let facingMode = 'user';
-  let fpsCount = 0, lastFpsTime = performance.now();
+let stream       = null;
+let facingMode   = 'user';
+let currentFx    = 'none';
+let adjF         = '';
+let mirrored     = false;
+let gridOn       = false;
+let timerOn      = false;
 
-  // FPS tracking
-  function trackFPS() {
-    fpsCount++;
-    const now = performance.now();
-    if (now - lastFpsTime >= 1000) {
-      const fps = Math.round(fpsCount * 1000 / (now - lastFpsTime));
-      fpsDisp.textContent = fps + ' FPS';
-      lastFpsTime = now;
-      fpsCount = 0;
-      if (stream) {
-        const track = stream.getVideoTracks()[0];
-        if (track) {
-          const s = track.getSettings();
-          const w = s.width || 0, h = s.height || 0;
-          resBadge.textContent = `${w} × ${h}  ·  ${fps}fps`;
-          resText.textContent = `${w}×${h}`;
-        }
-      }
-    }
-    requestAnimationFrame(trackFPS);
-  }
-  requestAnimationFrame(trackFPS);
+// 3D state
+let T = { per:800, rx:0, ry:0, rz:0, sc:1 };
 
-  const resMap = {
-    '4k':    { width: { ideal: 3840 }, height: { ideal: 2160 } },
-    '1440p': { width: { ideal: 2560 }, height: { ideal: 1440 } },
-    '1080p': { width: { ideal: 1920 }, height: { ideal: 1080 } },
-    '720p':  { width: { ideal: 1280 }, height: { ideal: 720 } },
-  };
+// AI state
+let detector     = null;
+let poses        = [];
+let poseMode     = false;
+let fallMode     = false;
+let showDots     = false;
+let showSkel     = false;
+let fallActive   = false;
+let fallTid      = null;
+let poseRunning  = false;
 
-  async function startCamera() {
-    const resKey = document.getElementById('resSelect').value;
-    const constraints = {
-      video: { ...resMap[resKey], facingMode },
+// Recording
+let recorder     = null;
+let recChunks    = [];
+let recStream    = null;
+let recCv        = null;
+let recCtx       = null;
+let isRec        = false;
+let recStart     = 0;
+let recIv        = null;
+
+// Gallery
+let gallery      = [];
+
+// FPS
+let fFrames = 0, fLast = performance.now(), fps = 0;
+
+// ── SKELETON CONNECTIONS (MoveNet 17 kp) ──
+const CONN = [[0,1],[0,2],[1,3],[2,4],[5,6],[5,7],[7,9],[6,8],[8,10],
+              [5,11],[6,12],[11,12],[11,13],[13,15],[12,14],[14,16]];
+const KPN  = ['nose','left_eye','right_eye','left_ear','right_ear',
+              'left_shoulder','right_shoulder','left_elbow','right_elbow',
+              'left_wrist','right_wrist','left_hip','right_hip',
+              'left_knee','right_knee','left_ankle','right_ankle'];
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+window.onload = () => {
+  startCam();
+  requestAnimationFrame(loop);
+};
+
+// ══════════════════════════════════════════════
+// CAMERA
+// ══════════════════════════════════════════════
+const resMap = {
+  '4k':   {width:{ideal:3840},height:{ideal:2160}},
+  '1440p':{width:{ideal:2560},height:{ideal:1440}},
+  '1080p':{width:{ideal:1920},height:{ideal:1080}},
+  '720p': {width:{ideal:1280},height:{ideal:720}},
+};
+
+async function startCam() {
+  const rk = document.getElementById('resSel').value;
+  try {
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { ...resMap[rk], facingMode },
       audio: false
-    };
-    try {
-      if (stream) stream.getTracks().forEach(t => t.stop());
-      stream = await navigator.mediaDevices.getUserMedia(constraints);
-      video.srcObject = stream;
-      video.style.display = 'block';
-      noCam.classList.remove('show');
-      statusDot.classList.add('live');
-      statusText.textContent = 'LIVE';
-    } catch(e) {
-      noCam.classList.add('show');
-      statusText.textContent = 'NO ACCESS';
-      console.warn('Camera error:', e);
-      // Show placeholder for demo
-      video.style.display = 'none';
-      noCam.querySelector('.start-cam-btn').textContent = 'THỬ LẠI';
-    }
+    });
+    video.srcObject = stream;
+    // Mirror front cam by default (like normal phone camera)
+    if (facingMode === 'user') { mirrored = true; document.getElementById('btnMirror').classList.add('on'); }
+    else { mirrored = false; document.getElementById('btnMirror').classList.remove('on'); }
+    applyFx();
+    video.style.display = 'block';
+    document.getElementById('noCam').classList.remove('show');
+    document.getElementById('camDot').classList.add('live');
+    document.getElementById('camSt').textContent = 'LIVE';
+  } catch(e) {
+    console.warn('Camera:', e);
+    document.getElementById('camSt').textContent = 'NO ACCESS';
+    document.getElementById('noCam').querySelector('.start-btn').textContent = 'THỬ LẠI';
+  }
+}
+
+async function changeRes() { if (stream) await startCam(); }
+async function switchCam() {
+  facingMode = facingMode === 'user' ? 'environment' : 'user';
+  await startCam();
+}
+
+// ══════════════════════════════════════════════
+// RAF LOOP — FPS + POSE CANVAS
+// ══════════════════════════════════════════════
+function loop() {
+  fFrames++;
+  const now = performance.now();
+  if (now - fLast >= 1000) {
+    fps = Math.round(fFrames * 1000 / (now - fLast));
+    fLast = now; fFrames = 0;
+    updHUD();
   }
 
-  async function changeResolution() { if (stream) await startCamera(); }
-  async function switchCamera() {
-    facingMode = facingMode === 'user' ? 'environment' : 'user';
-    if (stream) await startCamera();
+  // Sync pose canvas to video display size
+  const vRect = video.getBoundingClientRect();
+  const pRect = pCv.parentElement.getBoundingClientRect();
+  pCv.width  = pRect.width;
+  pCv.height = pRect.height;
+
+  // Draw skeleton
+  if ((showDots || showSkel) && poses.length > 0 && video.videoWidth > 0) {
+    drawSkeleton(pCtx, poses[0].keypoints, pRect.width, pRect.height, false);
+  } else {
+    pCtx.clearRect(0, 0, pCv.width, pCv.height);
   }
 
-  function setEffect(btn) {
-    document.querySelectorAll('.effect-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentFilter = btn.dataset.filter;
-    applyFilter();
+  requestAnimationFrame(loop);
+}
+
+function updHUD() {
+  if (!stream) return;
+  const tr = stream.getVideoTracks()[0];
+  if (!tr) return;
+  const s = tr.getSettings();
+  const w = s.width||0, h = s.height||0;
+  document.getElementById('resBadge').textContent = `${w}×${h} · ${fps}fps`;
+  document.getElementById('resDisp').textContent  = `${w}×${h}`;
+  document.getElementById('fpsDisp').textContent  = fps + 'fps';
+}
+
+// ══════════════════════════════════════════════
+// EFFECTS
+// ══════════════════════════════════════════════
+function setFx(btn) {
+  document.querySelectorAll('.fx-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  currentFx = btn.dataset.f;
+  applyFx();
+}
+
+function updAdj() {
+  const b = +document.getElementById('sBri').value;
+  const c = +document.getElementById('sCon').value;
+  const s = +document.getElementById('sSat').value;
+  const bl= +document.getElementById('sBlr').value;
+  const h = +document.getElementById('sHue').value;
+  document.getElementById('vBri').textContent = b + '%';
+  document.getElementById('vCon').textContent = c + '%';
+  document.getElementById('vSat').textContent = s + '%';
+  document.getElementById('vBlr').textContent = bl + 'px';
+  document.getElementById('vHue').textContent = h + '°';
+  adjF = `brightness(${b}%) contrast(${c}%) saturate(${s}%) blur(${bl}px) hue-rotate(${h}deg)`;
+  applyFx();
+}
+
+function applyFx() {
+  const base = currentFx === 'none' ? '' : currentFx;
+  video.style.filter = [base, adjF].filter(Boolean).join(' ') || 'none';
+  const mx = mirrored ? ' scaleX(-1)' : '';
+  video.style.transform =
+    `perspective(${T.per}px) rotateX(${T.rx}deg) rotateY(${T.ry}deg) rotateZ(${T.rz}deg) scale(${T.sc})${mx}`;
+}
+
+// ══════════════════════════════════════════════
+// 3D
+// ══════════════════════════════════════════════
+function upd3D() {
+  T.per = +document.getElementById('sPer').value;
+  T.rx  = +document.getElementById('sRx').value;
+  T.ry  = +document.getElementById('sRy').value;
+  T.rz  = +document.getElementById('sRz').value;
+  T.sc  = +document.getElementById('sSc').value / 100;
+  document.getElementById('vPer').textContent = T.per + 'px';
+  document.getElementById('vRx').textContent  = T.rx + '°';
+  document.getElementById('vRy').textContent  = T.ry + '°';
+  document.getElementById('vRz').textContent  = T.rz + '°';
+  document.getElementById('vSc').textContent  = T.sc.toFixed(1) + '×';
+  applyFx();
+}
+
+const p3dPresets = {
+  tilt:    {per:600, rx:18, ry:0,  rz:0,  sc:100},
+  dutch:   {per:800, rx:0,  ry:0,  rz:18, sc:100},
+  fisheye: {per:300, rx:0,  ry:0,  rz:0,  sc:130},
+  flat:    {per:800, rx:0,  ry:0,  rz:0,  sc:100},
+};
+
+function p3d(name) {
+  const p = p3dPresets[name]; if (!p) return;
+  document.getElementById('sPer').value = p.per;
+  document.getElementById('sRx').value  = p.rx;
+  document.getElementById('sRy').value  = p.ry;
+  document.getElementById('sRz').value  = p.rz;
+  document.getElementById('sSc').value  = p.sc;
+  upd3D();
+}
+
+// ══════════════════════════════════════════════
+// CONTROLS
+// ══════════════════════════════════════════════
+function togMirror() {
+  mirrored = !mirrored;
+  document.getElementById('btnMirror').classList.toggle('on', mirrored);
+  applyFx();
+}
+function togGrid() {
+  gridOn = !gridOn;
+  document.getElementById('gridOv').classList.toggle('show', gridOn);
+  document.getElementById('btnGrid').classList.toggle('on', gridOn);
+}
+function togTimer() {
+  timerOn = !timerOn;
+  document.getElementById('btnTimer').classList.toggle('on', timerOn);
+}
+function togFS() {
+  const vp = document.querySelector('.viewport');
+  document.fullscreenElement ? document.exitFullscreen() : vp.requestFullscreen?.();
+}
+function resetAll() {
+  document.querySelectorAll('.fx-btn').forEach(b => b.classList.remove('on'));
+  document.querySelector('[data-f="none"]').classList.add('on');
+  currentFx = 'none';
+  ['sBri','sCon','sSat'].forEach(id => document.getElementById(id).value = 100);
+  document.getElementById('sBlr').value = 0;
+  document.getElementById('sHue').value = 0;
+  updAdj();
+  ['sPer','sRx','sRy','sRz'].forEach(id => document.getElementById(id).value = id==='sPer'?800:0);
+  document.getElementById('sSc').value = 100;
+  upd3D();
+  mirrored = facingMode === 'user';
+  document.getElementById('btnMirror').classList.toggle('on', mirrored);
+  applyFx();
+}
+
+// ══════════════════════════════════════════════
+// CAPTURE PHOTO
+// ══════════════════════════════════════════════
+function doSnap() {
+  if (timerOn) runTimer(takePhoto);
+  else takePhoto();
+}
+
+function runTimer(cb) {
+  let n = 3;
+  const d = document.getElementById('timerD');
+  d.textContent = n; d.classList.add('show');
+  const iv = setInterval(() => {
+    n--;
+    if (n <= 0) { clearInterval(iv); d.classList.remove('show'); cb(); }
+    else d.textContent = n;
+  }, 1000);
+}
+
+function takePhoto() {
+  // Flash
+  const f = document.getElementById('flash');
+  f.style.cssText = 'opacity:1;transition:none';
+  setTimeout(() => { f.style.cssText = 'opacity:0;transition:opacity .5s'; }, 80);
+
+  const w = video.videoWidth  || 1920;
+  const h = video.videoHeight || 1080;
+  capCv.width = w; capCv.height = h;
+  capCtx.save();
+  if (mirrored) { capCtx.translate(w, 0); capCtx.scale(-1, 1); }
+  const base = currentFx === 'none' ? '' : currentFx;
+  capCtx.filter = [base, adjF].filter(Boolean).join(' ') || 'none';
+  capCtx.drawImage(video, 0, 0, w, h);
+  capCtx.restore();
+  if ((showDots || showSkel) && poses.length > 0) {
+    drawSkeleton(capCtx, poses[0].keypoints, w, h, true);
+  }
+  const url = capCv.toDataURL('image/jpeg', 0.95);
+  const fxName = document.querySelector('.fx-btn.on')?.textContent?.trim()?.split('\n')?.pop()?.trim() || 'NORMAL';
+  addGal({ type:'photo', url, fxName });
+}
+
+// ══════════════════════════════════════════════
+// VIDEO RECORDING
+// ══════════════════════════════════════════════
+function togRec() { isRec ? stopRec() : startRec(); }
+
+function startRec() {
+  if (!stream) return;
+  const vw = video.videoWidth  || 1280;
+  const vh = video.videoHeight || 720;
+  recCv = document.createElement('canvas');
+  recCv.width = vw; recCv.height = vh;
+  recCtx = recCv.getContext('2d');
+  isRec = true; recChunks = [];
+
+  function drawFrame() {
+    if (!isRec) return;
+    recCtx.save();
+    if (mirrored) { recCtx.translate(vw, 0); recCtx.scale(-1, 1); }
+    const base = currentFx === 'none' ? '' : currentFx;
+    recCtx.filter = [base, adjF].filter(Boolean).join(' ') || 'none';
+    recCtx.drawImage(video, 0, 0, vw, vh);
+    recCtx.restore();
+    if ((showDots || showSkel) && poses.length > 0)
+      drawSkeleton(recCtx, poses[0].keypoints, vw, vh, true);
+    requestAnimationFrame(drawFrame);
   }
 
-  function updateAdjust() {
-    const bri = document.getElementById('brightness').value;
-    const con = document.getElementById('contrast').value;
-    const sat = document.getElementById('saturation').value;
-    const blr = document.getElementById('blur').value;
-    const hue = document.getElementById('hue').value;
-    document.getElementById('briVal').textContent = bri + '%';
-    document.getElementById('conVal').textContent = con + '%';
-    document.getElementById('satVal').textContent = sat + '%';
-    document.getElementById('blurVal').textContent = blr + 'px';
-    document.getElementById('hueVal').textContent = hue + '°';
-    adjustFilter = `brightness(${bri}%) contrast(${con}%) saturate(${sat}%) blur(${blr}px) hue-rotate(${hue}deg)`;
-    applyFilter();
-  }
+  recStream = recCv.captureStream(30);
+  const opts = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+    ? {mimeType:'video/webm;codecs=vp9'} : {};
+  try { recorder = new MediaRecorder(recStream, opts); }
+  catch(e) { recorder = new MediaRecorder(recStream); }
 
-  function applyFilter() {
-    const base = currentFilter === 'none' ? '' : currentFilter;
-    video.style.filter = [base, adjustFilter].filter(Boolean).join(' ') || 'none';
-    if (isMirrored) video.style.transform = 'scaleX(-1)';
-    else video.style.transform = '';
-  }
-
-  function toggleMirror() {
-    isMirrored = !isMirrored;
-    document.getElementById('mirrorBtn').classList.toggle('active', isMirrored);
-    applyFilter();
-  }
-
-  function toggleGrid() {
-    gridVisible = !gridVisible;
-    gridOverlay.classList.toggle('visible', gridVisible);
-    document.getElementById('gridBtn').classList.toggle('active', gridVisible);
-  }
-
-  function toggleTimer() {
-    timerMode = !timerMode;
-    document.getElementById('timerBtn').classList.toggle('active', timerMode);
-  }
-
-  function capturePhoto() {
-    if (timerMode) {
-      runTimer();
-    } else {
-      snap();
-    }
-  }
-
-  function runTimer() {
-    let count = 3;
-    timerRing.textContent = count;
-    timerRing.classList.add('show');
-    const iv = setInterval(() => {
-      count--;
-      if (count <= 0) {
-        clearInterval(iv);
-        timerRing.classList.remove('show');
-        snap();
-      } else {
-        timerRing.textContent = count;
-      }
-    }, 1000);
-  }
-
-  function snap() {
-    // Flash
-    flash.classList.add('snap');
-    setTimeout(() => {
-      flash.classList.remove('snap');
-      flash.classList.add('fade');
-      setTimeout(() => flash.classList.remove('fade'), 500);
-    }, 80);
-
-    // Draw frame
-    const w = video.videoWidth || 1920;
-    const h = video.videoHeight || 1080;
-    canvas.width = w;
-    canvas.height = h;
-
-    if (isMirrored) {
-      ctx.translate(w, 0);
-      ctx.scale(-1, 1);
-    }
-
-    // Build filter string for canvas
-    const base = currentFilter === 'none' ? '' : currentFilter;
-    ctx.filter = [base, adjustFilter].filter(Boolean).join(' ') || 'none';
-    ctx.drawImage(video, 0, 0, w, h);
-
-    const dataURL = canvas.toDataURL('image/jpeg', 0.95);
-    const effectName = document.querySelector('.effect-btn.active')?.textContent.trim().split('\n').pop().trim() || 'NORMAL';
-
-    addToGallery(dataURL, effectName, w, h);
-  }
-
-  function addToGallery(dataURL, effectName, w, h) {
-    photos.unshift({ dataURL, effectName, w, h });
-    document.getElementById('photoCount').textContent = photos.length;
-    document.getElementById('emptyGallery').style.display = 'none';
-
-    const grid = document.getElementById('galleryGrid');
-    const item = document.createElement('div');
-    item.className = 'gallery-item';
-    item.innerHTML = `
-      <img src="${dataURL}" alt="photo">
-      <span class="effect-tag">${effectName}</span>
-      <button class="dl-btn" onclick="downloadPhoto('${dataURL}', '${effectName}')">↓ TẢI VỀ</button>
-    `;
-    grid.insertBefore(item, grid.firstChild);
-  }
-
-  function downloadPhoto(dataURL, name) {
-    const a = document.createElement('a');
-    a.href = dataURL;
-    a.download = `lumina_${name.toLowerCase()}_${Date.now()}.jpg`;
-    a.click();
-  }
-
-  function toggleFullscreen() {
-    const vp = document.querySelector('.viewport');
-    if (!document.fullscreenElement) vp.requestFullscreen?.();
-    else document.exitFullscreen?.();
-  }
-
-  function resetAll() {
-    currentFilter = 'none';
-    adjustFilter = '';
-    document.querySelectorAll('.effect-btn').forEach(b => b.classList.remove('active'));
-    document.querySelector('[data-filter="none"]').classList.add('active');
-    document.getElementById('brightness').value = 100;
-    document.getElementById('contrast').value = 100;
-    document.getElementById('saturation').value = 100;
-    document.getElementById('blur').value = 0;
-    document.getElementById('hue').value = 0;
-    ['briVal','conVal','satVal'].forEach(id => document.getElementById(id).textContent = '100%');
-    document.getElementById('blurVal').textContent = '0px';
-    document.getElementById('hueVal').textContent = '0°';
-    isMirrored = false;
-    document.getElementById('mirrorBtn').classList.remove('active');
-    applyFilter();
-  }
-
-  // Auto-start on load
-  window.onload = () => {
-    noCam.classList.add('show');
-    startCamera();
+  recorder.ondataavailable = e => { if (e.data.size > 0) recChunks.push(e.data); };
+  recorder.onstop = () => {
+    const blob = new Blob(recChunks, {type:'video/webm'});
+    addGal({ type:'video', url: URL.createObjectURL(blob), dur: (Date.now()-recStart)/1000 });
   };
 
-  // Keyboard shortcuts
-  document.addEventListener('keydown', e => {
-    if (e.code === 'Space') { e.preventDefault(); capturePhoto(); }
-    if (e.code === 'KeyG') toggleGrid();
-    if (e.code === 'KeyM') toggleMirror();
-    if (e.code === 'KeyT') toggleTimer();
-  });
+  recorder.start(500);
+  recStart = Date.now();
+  drawFrame();
+
+  // UI
+  document.getElementById('recBtn').classList.add('recording');
+  document.getElementById('recBtn').textContent = '⏹';
+  document.getElementById('recTag').classList.add('show');
+  document.getElementById('recPill').classList.add('show');
+  recIv = setInterval(() => {
+    const s = Math.floor((Date.now()-recStart)/1000);
+    document.getElementById('recTm').textContent =
+      String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+  }, 500);
+}
+
+function stopRec() {
+  if (!isRec) return;
+  isRec = false;
+  recorder?.stop();
+  clearInterval(recIv);
+  document.getElementById('recBtn').classList.remove('recording');
+  document.getElementById('recBtn').textContent = '⏺';
+  document.getElementById('recTag').classList.remove('show');
+  document.getElementById('recPill').classList.remove('show');
+}
+
+// ══════════════════════════════════════════════
+// GALLERY
+// ══════════════════════════════════════════════
+function addGal(item) {
+  gallery.unshift(item);
+  document.getElementById('galCnt').textContent = gallery.length;
+  document.getElementById('emptyGal').style.display = 'none';
+  const grid = document.getElementById('galGrid');
+  const div = document.createElement('div');
+  div.className = 'g-item';
+  if (item.type === 'photo') {
+    div.innerHTML = `<img src="${item.url}">
+      <span class="g-tag">${item.fxName}</span>
+      <button class="g-dl" onclick="dlItem('${item.url}','photo','${item.fxName}')">↓ TẢI</button>`;
+  } else {
+    const d = item.dur ? item.dur.toFixed(0)+'s' : '';
+    div.innerHTML = `<div class="g-vid-thumb">🎥</div>
+      <span class="g-tag vid">VID ${d}</span>
+      <button class="g-dl" onclick="dlItem('${item.url}','video','')">↓ TẢI</button>`;
+  }
+  grid.insertBefore(div, grid.firstChild);
+}
+
+function dlItem(url, type, name) {
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = type === 'photo'
+    ? `lumina_${name.toLowerCase()}_${Date.now()}.jpg`
+    : `lumina_video_${Date.now()}.webm`;
+  a.click();
+}
+
+// ══════════════════════════════════════════════
+// AI — POSE DETECTION (TF.js MoveNet)
+// ══════════════════════════════════════════════
+async function loadAI() {
+  const badge = document.getElementById('aiBadge');
+  badge.textContent = 'LOADING AI MODEL...';
+  badge.classList.add('show');
+  try {
+    await tf.ready();
+    detector = await poseDetection.createDetector(
+      poseDetection.SupportedModels.MoveNet,
+      { modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING }
+    );
+    badge.classList.remove('show');
+    document.getElementById('aiDot').classList.add('live');
+    document.getElementById('aiSt').textContent = 'AI READY';
+    poseLoop();
+  } catch(e) {
+    console.error('AI load error:', e);
+    badge.textContent = 'AI MODEL LOAD ERROR';
+    setTimeout(() => badge.classList.remove('show'), 4000);
+    poseMode = false;
+    document.getElementById('tgPose').classList.remove('on');
+  }
+}
+
+async function poseLoop() {
+  poseRunning = true;
+  while (poseMode) {
+    if (video.readyState >= 2 && video.videoWidth > 0) {
+      try {
+        poses = await detector.estimatePoses(video);
+        if (poses.length > 0) {
+          updateAIPanel(poses[0]);
+          if (fallMode) checkFall(poses[0]);
+        } else {
+          document.getElementById('aiPpl').textContent = '0';
+        }
+      } catch(e) {}
+    }
+    await new Promise(r => setTimeout(r, 80));
+  }
+  poseRunning = false;
+  poses = [];
+  pCtx.clearRect(0, 0, pCv.width, pCv.height);
+}
+
+function updateAIPanel(pose) {
+  const kps = pose.keypoints;
+  document.getElementById('aiPpl').textContent = poses.length;
+
+  // Body angle
+  const ls = kps[5], rs = kps[6], lh = kps[11], rh = kps[12];
+  if (ls.score>.3 && rs.score>.3 && lh.score>.3 && rh.score>.3) {
+    const sX = (ls.x+rs.x)/2, sY = (ls.y+rs.y)/2;
+    const hX = (lh.x+rh.x)/2, hY = (lh.y+rh.y)/2;
+    const ang = Math.abs(Math.atan2(hY-sY, hX-sX) * 180/Math.PI);
+    document.getElementById('aiAngle').textContent = ang.toFixed(0) + '°';
+    const fallen = ang < 35 || ang > 145;
+    document.getElementById('aiPose').textContent  = fallen ? 'FALLEN ⚠' : 'ĐỨNG THẲNG ✓';
+    document.getElementById('aiPose').className = 'ai-card-val ' + (fallen ? 'warn' : 'ok');
+  }
+
+  // Keypoint list
+  const kpGrid = document.getElementById('kpGrid');
+  kpGrid.innerHTML = kps.map((kp, i) => {
+    const d = kp.score > .38;
+    return `<div class="kp-item ${d?'det':''}">
+      <div class="kp-d"></div>
+      <span>${KPN[i]?.replace(/_/g,' ')}</span>
+    </div>`;
+  }).join('');
+}
+
+function checkFall(pose) {
+  const kps = pose.keypoints;
+  const ls=kps[5],rs=kps[6],lh=kps[11],rh=kps[12];
+  if (ls.score<.3||rs.score<.3||lh.score<.3||rh.score<.3) return;
+  const sX=(ls.x+rs.x)/2, sY=(ls.y+rs.y)/2;
+  const hX=(lh.x+rh.x)/2, hY=(lh.y+rh.y)/2;
+  const ang = Math.abs(Math.atan2(hY-sY,hX-sX)*180/Math.PI);
+  const fallen = ang<35 || ang>145;
+  if (fallen && !fallActive) {
+    fallActive = true;
+    document.getElementById('fallOv').classList.add('show');
+    if (fallTid) clearTimeout(fallTid);
+    fallTid = setTimeout(() => {
+      fallActive = false;
+      document.getElementById('fallOv').classList.remove('show');
+    }, 4000);
+  }
+}
+
+// ══════════════════════════════════════════════
+// DRAW SKELETON
+// Handles both display canvas (scaled to viewport) and capture canvas (native res)
+// ══════════════════════════════════════════════
+function drawSkeleton(ctx, kps, cw, ch, isCapture) {
+  if (!kps) return;
+  ctx.clearRect(0, 0, cw, ch);
+
+  // Calculate actual video area within canvas (object-fit: contain logic)
+  const vw = video.videoWidth  || 640;
+  const vh = video.videoHeight || 480;
+  let scale, ox, oy;
+  if (isCapture) {
+    // For capture canvas, no offset — fill entire canvas
+    scale = 1; ox = 0; oy = 0;
+  } else {
+    // For display canvas — replicate object-fit:contain
+    const aspect = vw / vh;
+    const canvAsp = cw / ch;
+    if (aspect > canvAsp) {
+      scale = cw / vw; ox = 0; oy = (ch - vh*scale)/2;
+    } else {
+      scale = ch / vh; ox = (cw - vw*scale)/2; oy = 0;
+    }
+  }
+
+  function kpPos(kp) {
+    let x = kp.x * scale + ox;
+    if (mirrored && !isCapture) x = cw - x + ox*2;
+    // For capture, mirror handled during drawImage
+    const y = kp.y * scale + oy;
+    return [x, y];
+  }
+
+  // Draw connections
+  if (showSkel) {
+    ctx.lineWidth = isCapture ? 3 : 2.5;
+    CONN.forEach(([a,b]) => {
+      const ka=kps[a], kb=kps[b];
+      if (!ka||!kb||ka.score<.33||kb.score<.33) return;
+      const [ax,ay] = kpPos(ka);
+      const [bx,by] = kpPos(kb);
+      const g = ctx.createLinearGradient(ax,ay,bx,by);
+      g.addColorStop(0,'rgba(80,200,240,.9)');
+      g.addColorStop(1,'rgba(240,80,180,.9)');
+      ctx.strokeStyle = g;
+      ctx.lineJoin = 'round';
+      ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(bx,by); ctx.stroke();
+    });
+  }
+
+  // Draw dots
+  if (showDots) {
+    kps.forEach((kp, i) => {
+      if (kp.score < .33) return;
+      const [x,y] = kpPos(kp);
+      const r = isCapture ? 6 : 5;
+      // Glow
+      ctx.beginPath(); ctx.arc(x,y,r*2.2,0,Math.PI*2);
+      ctx.fillStyle='rgba(240,203,80,.12)'; ctx.fill();
+      // Core dot
+      ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
+      ctx.fillStyle='#f0cb50'; ctx.fill();
+      // White center
+      ctx.beginPath(); ctx.arc(x,y,r*.4,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,255,255,.8)'; ctx.fill();
+      // Label key joints
+      if ([0,5,6,11,12,15,16].includes(i) && !isCapture) {
+        ctx.fillStyle='rgba(240,230,200,.75)';
+        ctx.font='9px Space Mono,monospace';
+        ctx.fillText(KPN[i].replace(/_/g,' '), x+7, y-4);
+      }
+    });
+  }
+}
+
+// ══════════════════════════════════════════════
+// AI TOGGLES
+// ══════════════════════════════════════════════
+async function togPose() {
+  poseMode = !poseMode;
+  document.getElementById('tgPose').classList.toggle('on', poseMode);
+  document.getElementById('aiInfoSec').style.display = poseMode ? 'block' : 'none';
+  if (poseMode) {
+    if (!detector) await loadAI();
+    else if (!poseRunning) poseLoop();
+  } else {
+    poses = [];
+  }
+}
+async function togFall() {
+  fallMode = !fallMode;
+  document.getElementById('tgFall').classList.toggle('on', fallMode);
+  if (fallMode && !poseMode) await togPose();
+}
+async function togDots() {
+  showDots = !showDots;
+  document.getElementById('tgDots').classList.toggle('on', showDots);
+  if (showDots && !poseMode) await togPose();
+}
+async function togSkel() {
+  showSkel = !showSkel;
+  document.getElementById('tgSkel').classList.toggle('on', showSkel);
+  if (showSkel && !poseMode) await togPose();
+}
+
+// ══════════════════════════════════════════════
+// KEYBOARD SHORTCUTS
+// ══════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.code === 'Space') { e.preventDefault(); doSnap(); }
+  if (e.code === 'KeyG') togGrid();
+  if (e.code === 'KeyM') togMirror();
+  if (e.code === 'KeyT') togTimer();
+  if (e.code === 'KeyR') togRec();
+});
 </script>
 </body>
 </html>
