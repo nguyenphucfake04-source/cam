@@ -4,753 +4,673 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>NEXUS · AI STUDIO</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&family=Syne+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Bebas+Neue&family=JetBrains+Mono:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #080810;
-  --surface: rgba(18,18,30,0.92);
-  --surface2: rgba(28,28,45,0.88);
-  --border: rgba(255,255,255,0.08);
-  --border2: rgba(255,255,255,0.13);
-  --pink: #ff2d78;
-  --pink2: rgba(255,45,120,0.18);
-  --cyan: #00f0ff;
-  --cyan2: rgba(0,240,255,0.15);
-  --gold: #ffc940;
-  --gold2: rgba(255,201,64,0.18);
-  --purple: #b44dff;
-  --gn: #22f09a;
-  --rd: #ff4060;
-  --tx: #f0f0fa;
-  --tx2: #8888aa;
-  --tx3: #44445a;
-  --r: 16px;
-  --r2: 24px;
+  --bg:#07070f;--s1:rgba(14,14,26,.95);--s2:rgba(20,20,38,.9);
+  --b1:rgba(255,255,255,.07);--b2:rgba(255,255,255,.13);--b3:rgba(255,255,255,.22);
+  --pk:#ff2060;--pk2:rgba(255,32,96,.18);--pk3:rgba(255,32,96,.08);
+  --cy:#00eeff;--cy2:rgba(0,238,255,.15);--cy3:rgba(0,238,255,.06);
+  --gd:#ffc340;--gd2:rgba(255,195,64,.18);--gd3:rgba(255,195,64,.07);
+  --pu:#a855f7;--pu2:rgba(168,85,247,.18);
+  --gn:#22d472;--gn2:rgba(34,212,114,.15);
+  --rd:#ff3555;--rd2:rgba(255,53,85,.18);
+  --tx:#f2f2ff;--tx2:#8a8aaa;--tx3:#3a3a55;
+  --r:14px;--r2:22px;--r3:32px;
+  --font-display:'Bebas Neue',sans-serif;
+  --font-body:'Space Grotesk',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
 }
-*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent }
-html, body { height:100%; overflow:hidden; background:var(--bg); font-family:'DM Sans', sans-serif; color:var(--tx); font-size:14px }
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);font-family:var(--font-body);color:var(--tx);font-size:14px}
 
-/* ── LAYOUT ── */
-.app { display:flex; flex-direction:column; height:100vh; position:relative; overflow:hidden }
+/* ──── LAYOUT ──── */
+.app{display:flex;flex-direction:column;height:100vh;position:relative;overflow:hidden}
 
-/* ── TOP BAR ── */
-.topbar {
-  position:absolute; top:0; left:0; right:0; z-index:100;
-  display:flex; align-items:center; justify-content:space-between;
-  padding:12px 16px 8px;
-  background:linear-gradient(180deg,rgba(8,8,16,0.95) 0%,transparent 100%);
-}
-.top-logo { font-family:'Syne'; font-size:.95rem; font-weight:800; letter-spacing:4px;
-  background:linear-gradient(90deg,var(--cyan),var(--pink)); -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent; background-clip:text }
-.top-badges { display:flex; gap:6px; align-items:center }
-.tbadge { font-family:'Syne Mono'; font-size:.52rem; letter-spacing:1.5px;
-  padding:3px 9px; border-radius:99px; border:1px solid var(--border2);
-  background:rgba(18,18,30,0.85); color:var(--tx2); display:flex; align-items:center; gap:5px;
-  backdrop-filter:blur(10px) }
-.tbadge.live { border-color:rgba(34,240,154,0.35); color:var(--gn); background:rgba(34,240,154,0.06) }
-.tbadge.rec { border-color:rgba(255,64,96,0.4); color:var(--rd); background:rgba(255,64,96,0.08) }
-.dot { width:5px; height:5px; border-radius:50%; flex-shrink:0 }
-.dot.g { background:var(--gn); box-shadow:0 0 5px var(--gn); animation:blink 2s infinite }
-.dot.r { background:var(--rd); box-shadow:0 0 5px var(--rd); animation:blink 1s infinite }
-.dot.c { background:var(--cyan); box-shadow:0 0 5px var(--cyan); animation:blink 1.5s infinite }
-@keyframes blink { 0%,100%{opacity:1}50%{opacity:.2} }
+/* ──── VIEWPORT ──── */
+.viewport{position:absolute;inset:0;background:#000;display:flex;align-items:center;justify-content:center}
+#videoEl{width:100%;height:100%;object-fit:cover;transition:filter .2s,transform .2s}
+#poseCanvas,#handCanvas,#swordCanvas,#customCanvas{
+  position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#swordCanvas{z-index:8}
+#poseCanvas{z-index:6}
+#handCanvas{z-index:7}
+#customCanvas{z-index:9}
 
-/* ── VIEWPORT ── */
-.viewport {
-  position:absolute; inset:0; background:#000;
-  display:flex; align-items:center; justify-content:center;
-}
-#videoEl { width:100%; height:100%; object-fit:cover; transition:filter .25s, transform .25s }
-#poseCanvas, #handCanvas, #swordCanvas {
-  position:absolute; inset:0; width:100%; height:100%; pointer-events:none }
-#swordCanvas { z-index:8 }
-#poseCanvas { z-index:6 }
-#handCanvas { z-index:7 }
+/* ──── SCAN LINES ──── */
+.scan-ov{position:absolute;inset:0;pointer-events:none;z-index:4;display:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.06) 3px,rgba(0,0,0,.06) 4px)}
+.scan-ov.on{display:block}
 
-/* Detect frame (TikTok style rounded frame) */
-.detect-frame {
-  position:absolute; inset:0; pointer-events:none; z-index:5;
-  display:none;
-}
-.detect-frame.on { display:block }
-.detect-frame::before {
-  content:''; position:absolute;
-  top:50%; left:50%; transform:translate(-50%,-50%);
-  width:52%; height:72%;
-  border:2px solid rgba(0,240,255,0.5);
-  border-radius:50% 50% 45% 45% / 40% 40% 45% 45%;
-  box-shadow:0 0 30px rgba(0,240,255,0.15), inset 0 0 30px rgba(0,240,255,0.05);
-  animation:framePulse 3s ease-in-out infinite
-}
-.detect-frame::after {
-  content:'DETECTING'; position:absolute;
-  bottom:calc(14% + 8px); left:50%; transform:translateX(-50%);
-  font-family:'Syne Mono'; font-size:.5rem; letter-spacing:3px; color:rgba(0,240,255,0.6)
-}
-@keyframes framePulse { 0%,100%{border-color:rgba(0,240,255,.5)} 50%{border-color:rgba(0,240,255,.9)} }
-
-/* Corner brackets */
-.brackets { position:absolute; inset:0; pointer-events:none; z-index:5 }
-.brk { position:absolute; width:20px; height:20px; border-color:rgba(255,255,255,0.35); border-style:solid }
-.brk.tl { top:14px; left:14px; border-width:2px 0 0 2px; border-radius:3px 0 0 0 }
-.brk.tr { top:14px; right:14px; border-width:2px 2px 0 0; border-radius:0 3px 0 0 }
-.brk.bl { bottom:130px; left:14px; border-width:0 0 2px 2px; border-radius:0 0 0 3px }
-.brk.br { bottom:130px; right:14px; border-width:0 2px 2px 0; border-radius:0 0 3px 0 }
-
-/* ── OVERLAYS ── */
-.glitch-ov { position:absolute; inset:0; pointer-events:none; z-index:9; display:none }
-.glitch-ov.on { display:block; animation:gA .15s steps(1) infinite }
-.glitch-ov::before { content:''; position:absolute; inset:0;
-  background:linear-gradient(transparent 0%,rgba(255,45,120,.05) 50%,transparent 50%);
-  background-size:100% 3px; animation:scn .06s linear infinite }
-.glitch-ov::after { content:''; position:absolute; inset:0;
-  box-shadow:inset 3px 0 0 rgba(0,240,255,.12), inset -3px 0 0 rgba(255,45,120,.12);
-  animation:gB .18s steps(1) infinite }
-@keyframes gA{0%{opacity:1}50%{opacity:.7}100%{opacity:1}}
-@keyframes gB{0%{transform:translate(0)}25%{transform:translate(-2px,1px)}50%{transform:translate(2px,-1px)}100%{transform:translate(0)}}
+/* ──── GLITCH ──── */
+.glitch-ov{position:absolute;inset:0;pointer-events:none;z-index:9;display:none}
+.glitch-ov.on{display:block;animation:gA .12s steps(1) infinite}
+.glitch-ov::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(transparent,rgba(255,32,96,.04) 50%,transparent 50%);
+  background-size:100% 3px;animation:scn .05s linear infinite}
+.glitch-ov::after{content:'';position:absolute;inset:0;
+  box-shadow:inset 3px 0 0 rgba(0,238,255,.1),inset -3px 0 0 rgba(255,32,96,.1);
+  animation:gB .15s steps(1) infinite}
+@keyframes gA{0%{opacity:1}50%{opacity:.65}100%{opacity:1}}
+@keyframes gB{0%{transform:translate(0)}25%{transform:translate(-3px,1px)}50%{transform:translate(3px,-1px)}100%{transform:translate(0)}}
 @keyframes scn{0%{background-position:0 0}100%{background-position:0 100%}}
 
-.scan-ov { position:absolute; inset:0; pointer-events:none; z-index:4; display:none;
-  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.08) 3px,rgba(0,0,0,.08) 4px) }
-.scan-ov.on { display:block }
+/* ──── VIGNETTE ──── */
+.vignette{position:absolute;inset:0;pointer-events:none;z-index:3;
+  background:radial-gradient(ellipse 88% 88% at 50% 50%,transparent 38%,rgba(0,0,0,.65) 100%)}
 
-.vignette { position:absolute; inset:0; pointer-events:none; z-index:3;
-  background:radial-gradient(ellipse 85% 85% at 50% 50%, transparent 40%, rgba(0,0,0,.55) 100%) }
+/* ──── TOPBAR ──── */
+.topbar{position:absolute;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;
+  background:linear-gradient(180deg,rgba(7,7,15,.96) 0%,transparent 100%)}
+.top-logo{font-family:var(--font-display);font-size:1.5rem;letter-spacing:5px;
+  background:linear-gradient(90deg,var(--cy),var(--pk));-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;background-clip:text}
+.top-badges{display:flex;gap:6px;align-items:center}
+.tbadge{font-family:var(--font-mono);font-size:.5rem;letter-spacing:1.5px;
+  padding:4px 10px;border-radius:99px;border:1px solid var(--b2);
+  background:rgba(14,14,26,.9);color:var(--tx2);display:flex;align-items:center;gap:5px;
+  backdrop-filter:blur(12px)}
+.tbadge.live{border-color:rgba(34,212,114,.35);color:var(--gn);background:rgba(34,212,114,.06)}
+.tbadge.rec{border-color:rgba(255,53,85,.45);color:var(--rd);background:rgba(255,53,85,.1)}
+.dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.dot.g{background:var(--gn);box-shadow:0 0 6px var(--gn);animation:blink 2s infinite}
+.dot.r{background:var(--rd);box-shadow:0 0 6px var(--rd);animation:blink .8s infinite}
+.dot.c{background:var(--cy);box-shadow:0 0 6px var(--cy);animation:blink 1.4s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
 
-/* Flash */
-.flash { position:absolute; inset:0; background:#fff; opacity:0; pointer-events:none; z-index:30 }
+/* ──── CORNER BRACKETS ──── */
+.brackets{position:absolute;inset:0;pointer-events:none;z-index:5}
+.brk{position:absolute;width:22px;height:22px;border-color:rgba(255,255,255,.3);border-style:solid}
+.brk.tl{top:15px;left:15px;border-width:2px 0 0 2px;border-radius:3px 0 0 0}
+.brk.tr{top:15px;right:15px;border-width:2px 2px 0 0;border-radius:0 3px 0 0}
+.brk.bl{bottom:135px;left:15px;border-width:0 0 2px 2px;border-radius:0 0 0 3px}
+.brk.br{bottom:135px;right:15px;border-width:0 2px 2px 0;border-radius:0 0 3px 0}
 
-/* Timer */
-.timer-d { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-  font-family:'Syne'; font-size:11rem; font-weight:800; color:#fff;
-  pointer-events:none; opacity:0; z-index:25; text-shadow:0 0 60px rgba(255,201,64,.8);
-  transition:opacity .2s }
-.timer-d.on { opacity:1 }
+/* ──── DETECT FRAME ──── */
+.detect-frame{position:absolute;inset:0;pointer-events:none;z-index:5;display:none}
+.detect-frame.on{display:block}
+.detect-frame::before{content:'';position:absolute;
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  width:50%;height:70%;border:1.5px solid rgba(0,238,255,.55);
+  border-radius:50% 50% 45% 45% / 40% 40% 45% 45%;
+  box-shadow:0 0 28px rgba(0,238,255,.13),inset 0 0 28px rgba(0,238,255,.04);
+  animation:framePulse 3s ease-in-out infinite}
+.detect-frame::after{content:'DETECTING';position:absolute;
+  bottom:calc(15%+8px);left:50%;transform:translateX(-50%);
+  font-family:var(--font-mono);font-size:.48rem;letter-spacing:4px;color:rgba(0,238,255,.6)}
+@keyframes framePulse{0%,100%{border-color:rgba(0,238,255,.5)}50%{border-color:rgba(0,238,255,.95)}}
 
-/* Fall alert */
-.fall-ov { position:absolute; inset:0; pointer-events:none; z-index:20;
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  background:rgba(255,64,96,.05); border:2px solid var(--rd); opacity:0; transition:opacity .3s }
-.fall-ov.on { opacity:1 }
-.fall-txt { font-family:'Syne'; font-size:2.5rem; font-weight:800; color:var(--rd);
-  letter-spacing:3px; animation:shk .25s infinite }
-.fall-sub { font-family:'Syne Mono'; font-size:.55rem; color:var(--rd); letter-spacing:3px; margin-top:6px }
-@keyframes shk { 0%,100%{transform:translateX(0)} 33%{transform:translateX(-4px)} 66%{transform:translateX(4px)} }
+/* ──── FALL ALERT ──── */
+.fall-ov{position:absolute;inset:0;pointer-events:none;z-index:20;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(255,53,85,.05);border:2px solid var(--rd);opacity:0;transition:opacity .3s}
+.fall-ov.on{opacity:1}
+.fall-txt{font-family:var(--font-display);font-size:3rem;letter-spacing:4px;color:var(--rd);animation:shk .2s infinite}
+.fall-sub{font-family:var(--font-mono);font-size:.52rem;color:var(--rd);letter-spacing:3px;margin-top:4px}
+@keyframes shk{0%,100%{transform:translateX(0)}33%{transform:translateX(-5px)}66%{transform:translateX(5px)}}
 
-/* Gesture feedback */
-.gest-hud { position:absolute; top:60px; left:50%; transform:translateX(-50%); z-index:35;
-  pointer-events:none; display:flex; flex-direction:column; align-items:center; gap:4px }
-.gest-badge { font-family:'Syne'; font-size:.9rem; font-weight:700; letter-spacing:2px;
-  padding:7px 20px; border-radius:99px; background:rgba(18,18,30,.9);
-  border:1.5px solid var(--cyan); color:var(--cyan); backdrop-filter:blur(12px);
-  opacity:0; transform:translateY(-8px) scale(.95); transition:all .25s;
-  box-shadow:0 0 20px rgba(0,240,255,.2) }
-.gest-badge.show { opacity:1; transform:translateY(0) scale(1) }
-.gest-badge.sword { border-color:var(--gold); color:var(--gold); box-shadow:0 0 20px rgba(255,201,64,.3) }
-.gest-action { font-family:'Syne Mono'; font-size:.52rem; letter-spacing:2px;
-  color:var(--tx2); opacity:0; transition:opacity .25s }
-.gest-action.show { opacity:1 }
+/* ──── GESTURE HUD ──── */
+.gest-hud{position:absolute;top:64px;left:50%;transform:translateX(-50%);z-index:35;
+  pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:4px}
+.gest-badge{font-family:var(--font-display);font-size:1rem;letter-spacing:3px;
+  padding:8px 22px;border-radius:99px;background:rgba(14,14,26,.92);
+  border:1.5px solid var(--cy);color:var(--cy);backdrop-filter:blur(14px);
+  opacity:0;transform:translateY(-10px) scale(.93);transition:all .22s;
+  box-shadow:0 0 24px rgba(0,238,255,.22)}
+.gest-badge.show{opacity:1;transform:translateY(0) scale(1)}
+.gest-badge.sword{border-color:var(--gd);color:var(--gd);box-shadow:0 0 24px rgba(255,195,64,.35)}
+.gest-badge.img{border-color:var(--pu);color:var(--pu);box-shadow:0 0 24px rgba(168,85,247,.3)}
+.gest-action{font-family:var(--font-mono);font-size:.5rem;letter-spacing:2px;
+  color:var(--tx2);opacity:0;transition:opacity .22s}
+.gest-action.show{opacity:1}
 
-/* No cam */
-.no-cam { position:absolute; inset:0; display:none; flex-direction:column;
-  align-items:center; justify-content:center; gap:14px; background:var(--bg);
-  z-index:50; text-align:center }
-.no-cam.on { display:flex }
-.nc-ico { font-size:3.5rem; opacity:.12 }
-.nc-txt { font-family:'Syne Mono'; font-size:.58rem; letter-spacing:3px; color:var(--tx3) }
-.start-btn { background:linear-gradient(135deg, var(--pink), var(--purple));
-  color:#fff; border:none; padding:12px 30px;
-  font-family:'Syne'; font-size:.8rem; font-weight:700; letter-spacing:3px;
-  border-radius:99px; cursor:pointer; margin-top:6px; transition:all .2s;
-  box-shadow:0 8px 24px rgba(255,45,120,.35) }
-.start-btn:hover { transform:scale(1.05) }
+/* ──── NO CAM ──── */
+.no-cam{position:absolute;inset:0;display:none;flex-direction:column;
+  align-items:center;justify-content:center;gap:16px;background:var(--bg);z-index:50;text-align:center}
+.no-cam.on{display:flex}
+.nc-ico{font-size:3.8rem;opacity:.1}
+.nc-txt{font-family:var(--font-mono);font-size:.55rem;letter-spacing:3px;color:var(--tx3)}
+.start-btn{background:linear-gradient(135deg,var(--pk),var(--pu));color:#fff;border:none;
+  padding:13px 32px;font-family:var(--font-display);font-size:.95rem;letter-spacing:4px;
+  border-radius:99px;cursor:pointer;margin-top:6px;transition:all .18s;
+  box-shadow:0 8px 28px rgba(255,32,96,.38)}
+.start-btn:hover{transform:scale(1.05);box-shadow:0 12px 36px rgba(255,32,96,.5)}
 
-/* Sword status HUD */
-.sword-hud { position:absolute; top:60px; right:16px; z-index:40;
-  display:none; flex-direction:column; gap:6px; pointer-events:none }
-.sword-hud.on { display:flex }
-.shud-badge { font-family:'Syne Mono'; font-size:.52rem; letter-spacing:1.5px;
-  padding:5px 12px; border-radius:8px; background:rgba(18,18,30,.9);
-  border:1px solid rgba(255,201,64,.35); color:var(--gold); backdrop-filter:blur(10px);
-  display:flex; align-items:center; gap:6px }
-.shud-mode { font-family:'Syne'; font-size:.78rem; font-weight:700;
-  color:var(--gold); text-shadow:0 0 12px var(--gold) }
+/* ──── SWORD HUD ──── */
+.sword-hud{position:absolute;top:65px;right:16px;z-index:40;display:none;flex-direction:column;gap:6px;pointer-events:none}
+.sword-hud.on{display:flex}
+.shud-badge{font-family:var(--font-mono);font-size:.5rem;letter-spacing:1.5px;
+  padding:5px 12px;border-radius:8px;background:rgba(14,14,26,.92);
+  border:1px solid rgba(255,195,64,.35);color:var(--gd);backdrop-filter:blur(10px);
+  display:flex;align-items:center;gap:6px}
 
-/* ── RIGHT SIDEBAR (TikTok style) ── */
-.sidebar-r {
-  position:absolute; right:10px; top:50%; transform:translateY(-50%);
-  display:flex; flex-direction:column; gap:8px; z-index:60;
-}
-.sb-btn {
-  width:44px; height:44px; border-radius:50%;
-  background:rgba(18,18,30,.85); border:1px solid var(--border2);
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  cursor:pointer; transition:all .2s; backdrop-filter:blur(12px);
-  color:var(--tx2); font-size:1.1rem; gap:1px; position:relative;
-}
-.sb-btn:hover, .sb-btn.on { background:rgba(255,45,120,.15); border-color:var(--pink); color:var(--pink) }
-.sb-btn.active-cyan { background:rgba(0,240,255,.12); border-color:var(--cyan); color:var(--cyan) }
-.sb-btn.active-gold { background:rgba(255,201,64,.12); border-color:var(--gold); color:var(--gold) }
-.sb-lbl { font-family:'Syne Mono'; font-size:.38rem; letter-spacing:1px; color:inherit; line-height:1 }
-.sb-notif { position:absolute; top:-2px; right:-2px; width:8px; height:8px;
-  border-radius:50%; background:var(--pink); box-shadow:0 0 5px var(--pink) }
+/* ──── FLASH ──── */
+.flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:30}
+.timer-d{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-display);font-size:10rem;color:#fff;pointer-events:none;opacity:0;z-index:25;
+  text-shadow:0 0 60px rgba(255,195,64,.85);transition:opacity .2s}
+.timer-d.on{opacity:1}
 
-/* ── BOTTOM AREA ── */
-.bottom-area {
-  position:absolute; bottom:0; left:0; right:0; z-index:80;
-  display:flex; flex-direction:column;
-  background:linear-gradient(0deg, rgba(8,8,16,.98) 0%, rgba(8,8,16,.9) 70%, transparent 100%);
-  padding-bottom:env(safe-area-inset-bottom, 8px);
-}
+/* ──── AI LOAD ──── */
+.ai-load{position:absolute;top:62px;left:50%;transform:translateX(-50%);
+  background:rgba(14,14,26,.92);border:1px solid var(--b2);padding:5px 16px;
+  border-radius:99px;font-family:var(--font-mono);font-size:.5rem;letter-spacing:1px;
+  color:var(--cy);display:none;align-items:center;gap:8px;backdrop-filter:blur(12px);
+  white-space:nowrap;z-index:50}
+.ai-load.on{display:flex}
+.ai-load::before{content:'';width:7px;height:7px;border-radius:50%;
+  border:1.5px solid var(--cy);border-top-color:transparent;animation:spin .55s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-/* Filter row (horizontal scroll, CapCut style) */
-.filter-row {
-  display:flex; gap:8px; padding:10px 14px;
-  overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch;
-}
-.filter-row::-webkit-scrollbar { display:none }
-.fx-chip {
-  flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:4px;
-  cursor:pointer; transition:all .2s;
-}
-.fx-thumb {
-  width:52px; height:52px; border-radius:12px; overflow:hidden;
-  border:2px solid transparent; transition:all .2s; position:relative;
-  background:rgba(28,28,45,.8); display:flex; align-items:center; justify-content:center;
-  font-size:1.4rem;
-}
-.fx-chip.on .fx-thumb {
-  border-color:var(--pink);
-  box-shadow:0 0 14px rgba(255,45,120,.4);
-}
-.fx-lbl { font-family:'Syne Mono'; font-size:.42rem; letter-spacing:1px; color:var(--tx2);
-  transition:color .2s }
-.fx-chip.on .fx-lbl { color:var(--pink) }
-.fx-chip:hover .fx-thumb { transform:scale(1.05) }
+/* ──── RIGHT SIDEBAR ──── */
+.sidebar-r{position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:7px;z-index:60}
+.sb-btn{width:46px;height:46px;border-radius:14px;background:rgba(14,14,26,.88);
+  border:1px solid var(--b2);display:flex;flex-direction:column;align-items:center;
+  justify-content:center;cursor:pointer;transition:all .18s;backdrop-filter:blur(14px);
+  color:var(--tx2);font-size:1.05rem;gap:2px;position:relative}
+.sb-btn:hover,.sb-btn.on{background:rgba(255,32,96,.15);border-color:var(--pk);color:var(--pk)}
+.sb-btn.active-cy{background:var(--cy3);border-color:var(--cy);color:var(--cy)}
+.sb-btn.active-gd{background:var(--gd3);border-color:var(--gd);color:var(--gd)}
+.sb-btn.active-pu{background:rgba(168,85,247,.1);border-color:var(--pu);color:var(--pu)}
+.sb-lbl{font-family:var(--font-mono);font-size:.37rem;letter-spacing:1px;color:inherit;line-height:1}
+.sb-notif{position:absolute;top:-3px;right:-3px;width:9px;height:9px;
+  border-radius:50%;background:var(--pk);box-shadow:0 0 6px var(--pk);border:1.5px solid var(--bg)}
 
-/* Tab bar */
-.tab-bar {
-  display:flex; align-items:flex-end; justify-content:center; gap:6px;
-  padding:4px 12px 10px;
-}
-.tab-item {
-  display:flex; flex-direction:column; align-items:center; gap:3px;
-  cursor:pointer; color:var(--tx3); transition:all .2s; padding:2px 8px;
-  font-size:.75rem; border-radius:10px; min-width:42px;
-}
-.tab-item.on { color:var(--tx) }
-.tab-item .ti-ico { font-size:1.3rem; transition:transform .2s }
-.tab-item.on .ti-ico { transform:scale(1.1) }
-.tab-item .ti-lbl { font-family:'Syne Mono'; font-size:.42rem; letter-spacing:1.5px }
+/* ──── BOTTOM AREA ──── */
+.bottom-area{position:absolute;bottom:0;left:0;right:0;z-index:80;
+  display:flex;flex-direction:column;
+  background:linear-gradient(0deg,rgba(7,7,15,.99) 0%,rgba(7,7,15,.92) 72%,transparent 100%);
+  padding-bottom:env(safe-area-inset-bottom,8px)}
 
-/* Shutter zone */
-.shutter-zone {
-  display:flex; align-items:center; justify-content:center; gap:16px;
-  padding:6px 0 4px;
-}
-.shutter-wrap { position:relative; display:flex; align-items:center; justify-content:center }
-.shutter-ring { width:74px; height:74px; border-radius:50%; border:3px solid var(--pink);
-  display:flex; align-items:center; justify-content:center; cursor:pointer;
-  transition:all .15s; box-shadow:0 0 20px rgba(255,45,120,.3) }
-.shutter-ring:active { transform:scale(.92) }
-.shutter-ring.rec-mode { border-color:var(--rd) }
-.shutter-inner { width:60px; height:60px; border-radius:50%;
-  background:linear-gradient(135deg,#fff,#e0e0f0);
-  display:flex; align-items:center; justify-content:center;
-  box-shadow:0 4px 16px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.8) }
-.shutter-inner.rec-on { background:var(--rd); border-radius:12px;
-  box-shadow:0 4px 16px rgba(255,64,96,.5) }
-.shutter-inner.sword-on {
-  background:linear-gradient(135deg, var(--gold), #ff8c00);
-  box-shadow:0 4px 20px rgba(255,201,64,.6)
-}
-.shutter-ico { font-size:1.5rem }
+/* ──── FILTER ROW ──── */
+.filter-row{display:flex;gap:8px;padding:10px 14px 6px;
+  overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.filter-row::-webkit-scrollbar{display:none}
+.fx-chip{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:all .18s}
+.fx-thumb{width:54px;height:54px;border-radius:13px;overflow:hidden;border:2px solid transparent;
+  transition:all .18s;background:rgba(20,20,38,.85);display:flex;align-items:center;
+  justify-content:center;font-size:1.45rem;position:relative}
+.fx-chip.on .fx-thumb{border-color:var(--pk);box-shadow:0 0 16px rgba(255,32,96,.42)}
+.fx-lbl{font-family:var(--font-mono);font-size:.4rem;letter-spacing:1px;color:var(--tx2);transition:color .18s}
+.fx-chip.on .fx-lbl{color:var(--pk)}
+.fx-chip:hover .fx-thumb{transform:scale(1.07)}
 
-.ctrl-side { display:flex; flex-direction:column; align-items:center; gap:5px; width:50px }
-.cs-btn { width:40px; height:40px; border-radius:50%;
-  background:rgba(28,28,45,.8); border:1px solid var(--border2);
-  display:flex; align-items:center; justify-content:center; cursor:pointer;
-  font-size:.9rem; transition:all .15s; color:var(--tx2) }
-.cs-btn:hover { background:rgba(255,255,255,.08); color:var(--tx) }
-.cs-btn.on { border-color:var(--cyan); color:var(--cyan); background:var(--cyan2) }
-.cs-lbl { font-family:'Syne Mono'; font-size:.38rem; letter-spacing:1px; color:var(--tx3) }
+/* ──── QUICK TOGGLE ROW ──── */
+.qtog-row{display:flex;gap:6px;padding:0 14px 6px;overflow-x:auto;scrollbar-width:none}
+.qtog-row::-webkit-scrollbar{display:none}
+.qt-btn{flex-shrink:0;display:flex;align-items:center;gap:5px;
+  padding:5px 12px;border-radius:99px;background:rgba(20,20,38,.85);
+  border:1px solid var(--b2);cursor:pointer;transition:all .18s;
+  font-family:var(--font-mono);font-size:.48rem;letter-spacing:1px;color:var(--tx2);
+  backdrop-filter:blur(10px)}
+.qt-btn:hover{border-color:var(--b3);color:var(--tx)}
+.qt-btn.on{background:rgba(0,238,255,.1);border-color:var(--cy);color:var(--cy)}
+.qt-btn.on-pk{background:var(--pk3);border-color:var(--pk);color:var(--pk)}
+.qt-btn.on-gd{background:var(--gd3);border-color:var(--gd);color:var(--gd)}
+.qt-btn.on-pu{background:rgba(168,85,247,.1);border-color:var(--pu);color:var(--pu)}
+.qt-ico{font-size:.85rem}
+.qt-dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.7}
 
-/* ── SLIDE PANELS ── */
-.panel {
-  position:absolute; z-index:90; background:var(--surface);
-  border-radius:var(--r2) var(--r2) 0 0; backdrop-filter:blur(24px);
-  border:1px solid var(--border); border-bottom:none;
-  transform:translateY(100%); transition:transform .35s cubic-bezier(.32,0,.15,1);
-  left:0; right:0; bottom:0; max-height:72vh;
-}
-.panel.open { transform:translateY(0) }
-.panel-drag { width:36px; height:4px; border-radius:2px; background:var(--border2);
-  margin:12px auto 6px; cursor:pointer }
-.panel-title { font-family:'Syne'; font-size:1rem; font-weight:700; padding:0 18px 12px;
-  display:flex; align-items:center; justify-content:space-between }
-.panel-scroll { overflow-y:auto; padding:0 16px 120px; scrollbar-width:thin;
-  scrollbar-color:var(--border) transparent; max-height:calc(72vh - 80px) }
+/* ──── SHUTTER ZONE ──── */
+.shutter-zone{display:flex;align-items:center;justify-content:center;gap:14px;padding:6px 0 4px}
+.shutter-wrap{position:relative;display:flex;align-items:center;justify-content:center}
+.shutter-ring{width:76px;height:76px;border-radius:50%;border:3px solid var(--pk);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:all .14s;box-shadow:0 0 22px rgba(255,32,96,.35)}
+.shutter-ring:active{transform:scale(.9)}
+.shutter-ring.rec-mode{border-color:var(--rd)}
+.shutter-ring.sword-mode{border-color:var(--gd);box-shadow:0 0 22px rgba(255,195,64,.4)}
+.shutter-ring.img-mode{border-color:var(--pu);box-shadow:0 0 22px rgba(168,85,247,.4)}
+.shutter-inner{width:61px;height:61px;border-radius:50%;
+  background:linear-gradient(145deg,#fff,#d0d0f0);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 18px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.8)}
+.shutter-inner.rec-on{background:var(--rd);border-radius:10px;box-shadow:0 4px 18px rgba(255,53,85,.55)}
+.shutter-inner.sword-on{background:linear-gradient(135deg,var(--gd),#e07800);box-shadow:0 4px 22px rgba(255,195,64,.6)}
+.shutter-inner.img-on{background:linear-gradient(135deg,var(--pu),#7c3aed);box-shadow:0 4px 22px rgba(168,85,247,.6)}
+.shutter-ico{font-size:1.5rem}
+.ctrl-side{display:flex;flex-direction:column;align-items:center;gap:4px;width:50px}
+.cs-btn{width:41px;height:41px;border-radius:50%;
+  background:rgba(20,20,38,.85);border:1px solid var(--b2);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  font-size:.9rem;transition:all .14s;color:var(--tx2)}
+.cs-btn:hover{background:rgba(255,255,255,.07);color:var(--tx)}
+.cs-btn.on{border-color:var(--cy);color:var(--cy);background:var(--cy3)}
+.cs-lbl{font-family:var(--font-mono);font-size:.37rem;letter-spacing:1px;color:var(--tx3)}
 
-/* Section headers */
-.sec-h { font-family:'Syne Mono'; font-size:.5rem; letter-spacing:3px; color:var(--tx3);
-  margin:14px 0 8px; display:flex; align-items:center; gap:8px }
-.sec-h::after { content:''; flex:1; height:1px; background:var(--border) }
+/* ──── TAB BAR ──── */
+.tab-bar{display:flex;align-items:flex-end;justify-content:center;gap:4px;padding:4px 12px 10px}
+.tab-item{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;
+  color:var(--tx3);transition:all .18s;padding:3px 8px;font-size:.75rem;border-radius:10px;min-width:44px}
+.tab-item.on{color:var(--tx)}
+.tab-item .ti-ico{font-size:1.25rem;transition:transform .18s}
+.tab-item.on .ti-ico{transform:scale(1.12)}
+.tab-item .ti-lbl{font-family:var(--font-mono);font-size:.4rem;letter-spacing:1.5px}
 
-/* Sliders */
-.sl-row { margin-bottom:12px }
-.sl-top { display:flex; justify-content:space-between; margin-bottom:5px }
-.sl-nm { font-size:.78rem; font-weight:500; color:var(--tx2) }
-.sl-v { font-family:'Syne Mono'; font-size:.6rem; color:var(--cyan) }
-.sl-v.gold { color:var(--gold) }
-.sl-v.pink { color:var(--pink) }
-input[type=range] { width:100%; height:3px; -webkit-appearance:none; appearance:none;
-  background:var(--border2); border-radius:2px; cursor:pointer; outline:none }
-input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:16px; height:16px;
-  border-radius:50%; background:var(--cyan); box-shadow:0 0 6px rgba(0,240,255,.5);
-  transition:transform .1s }
-input[type=range].gold::-webkit-slider-thumb { background:var(--gold); box-shadow:0 0 6px rgba(255,201,64,.5) }
-input[type=range].pink::-webkit-slider-thumb { background:var(--pink); box-shadow:0 0 6px rgba(255,45,120,.5) }
-input[type=range]:active::-webkit-slider-thumb { transform:scale(1.4) }
+/* ──── PANELS ──── */
+.overlay-dim{position:absolute;inset:0;background:rgba(0,0,0,.45);
+  z-index:85;display:none;backdrop-filter:blur(3px)}
+.overlay-dim.on{display:block}
+.panel{position:absolute;z-index:90;background:rgba(10,10,20,.97);
+  border-radius:var(--r2) var(--r2) 0 0;backdrop-filter:blur(30px);
+  border:1px solid var(--b2);border-bottom:none;
+  transform:translateY(100%);transition:transform .32s cubic-bezier(.3,0,.15,1);
+  left:0;right:0;bottom:0;max-height:75vh}
+.panel.open{transform:translateY(0)}
+.panel-drag{width:38px;height:4px;border-radius:2px;background:var(--b2);margin:12px auto 6px;cursor:pointer}
+.panel-title{font-family:var(--font-display);font-size:1.15rem;letter-spacing:2px;
+  padding:0 18px 12px;display:flex;align-items:center;justify-content:space-between;color:var(--tx)}
+.panel-close{background:rgba(255,255,255,.07);border:1px solid var(--b1);color:var(--tx2);
+  font-size:1rem;cursor:pointer;width:30px;height:30px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;transition:all .15s}
+.panel-close:hover{background:rgba(255,32,96,.15);border-color:var(--pk);color:var(--pk)}
+.panel-scroll{overflow-y:auto;padding:0 16px 130px;scrollbar-width:thin;
+  scrollbar-color:var(--b2) transparent;max-height:calc(75vh - 80px)}
 
-/* Toggles */
-.tg-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0;
-  border-bottom:1px solid var(--border) }
-.tg-lbl { font-size:.82rem; font-weight:500; cursor:pointer; display:flex; align-items:center; gap:8px }
-.tog { width:40px; height:22px; background:var(--border2); border-radius:11px; cursor:pointer;
-  position:relative; transition:background .2s; flex-shrink:0; border:1px solid var(--border) }
-.tog.on { background:rgba(34,240,154,.2); border-color:var(--gn) }
-.tog::after { content:''; position:absolute; top:4px; left:4px; width:12px; height:12px;
-  border-radius:50%; background:var(--tx3); transition:all .2s }
-.tog.on::after { left:22px; background:var(--gn); box-shadow:0 0 6px var(--gn) }
+/* ──── SECTION HEADERS ──── */
+.sec-h{font-family:var(--font-mono);font-size:.46rem;letter-spacing:3px;color:var(--tx3);
+  margin:16px 0 9px;display:flex;align-items:center;gap:8px}
+.sec-h::after{content:'';flex:1;height:1px;background:var(--b1)}
 
-/* AI Cards */
-.ai-card { background:rgba(28,28,45,.6); border:1px solid var(--border); border-radius:12px;
-  padding:10px 12px; margin-bottom:8px }
-.ai-lbl { font-family:'Syne Mono'; font-size:.48rem; letter-spacing:2px; color:var(--tx3); margin-bottom:3px }
-.ai-val { font-family:'Syne'; font-size:1.05rem; font-weight:700; color:var(--cyan) }
-.ai-val.ok { color:var(--gn) }
-.ai-val.warn { color:var(--rd) }
-.ai-val.gold { color:var(--gold) }
-.conf-bar { height:2px; background:var(--border); border-radius:1px; margin-top:6px; overflow:hidden }
-.conf-fill { height:100%; background:linear-gradient(90deg,var(--cyan),var(--pink)); border-radius:1px; transition:width .3s }
-.kp-grid { display:grid; grid-template-columns:1fr 1fr; gap:3px; margin-top:6px }
-.kp-it { font-family:'Syne Mono'; font-size:.45rem; color:var(--tx3); display:flex; align-items:center; gap:4px }
-.kp-d { width:4px; height:4px; border-radius:50%; background:var(--tx3); flex-shrink:0 }
-.kp-it.det { color:var(--tx2) }.kp-it.det .kp-d { background:var(--gn) }
+/* ──── SLIDERS ──── */
+.sl-row{margin-bottom:13px}
+.sl-top{display:flex;justify-content:space-between;margin-bottom:6px}
+.sl-nm{font-size:.78rem;font-weight:500;color:var(--tx2)}
+.sl-v{font-family:var(--font-mono);font-size:.58rem}
+.sl-v.cy{color:var(--cy)}.sl-v.gd{color:var(--gd)}.sl-v.pk{color:var(--pk)}.sl-v.pu{color:var(--pu)}
+input[type=range]{width:100%;height:3px;-webkit-appearance:none;appearance:none;
+  background:var(--b2);border-radius:2px;cursor:pointer;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;
+  border-radius:50%;background:var(--cy);box-shadow:0 0 8px rgba(0,238,255,.5);transition:transform .1s}
+input[type=range].gd::-webkit-slider-thumb{background:var(--gd);box-shadow:0 0 8px rgba(255,195,64,.5)}
+input[type=range].pk::-webkit-slider-thumb{background:var(--pk);box-shadow:0 0 8px rgba(255,32,96,.5)}
+input[type=range].pu::-webkit-slider-thumb{background:var(--pu);box-shadow:0 0 8px rgba(168,85,247,.5)}
+input[type=range]:active::-webkit-slider-thumb{transform:scale(1.45)}
 
-/* Preset grid */
-.preset-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin:8px 0 }
-.preset-btn { background:rgba(28,28,45,.7); border:1px solid var(--border); border-radius:10px;
-  padding:8px 4px; cursor:pointer; text-align:center; transition:all .15s; color:var(--tx2) }
-.preset-btn:hover { border-color:rgba(255,201,64,.4); color:var(--gold); background:rgba(255,201,64,.05) }
-.preset-btn .pi { font-size:1rem; display:block; margin-bottom:2px }
-.preset-btn .pn { font-family:'Syne Mono'; font-size:.44rem; letter-spacing:1px }
+/* ──── TOGGLES ──── */
+.tg-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--b1)}
+.tg-lbl{font-size:.8rem;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--tx)}
+.tog{width:42px;height:23px;background:var(--b2);border-radius:12px;cursor:pointer;
+  position:relative;transition:background .18s;flex-shrink:0;border:1px solid var(--b1)}
+.tog.on{background:rgba(34,212,114,.2);border-color:var(--gn)}
+.tog::after{content:'';position:absolute;top:4px;left:4px;width:13px;height:13px;
+  border-radius:50%;background:var(--tx3);transition:all .2s}
+.tog.on::after{left:23px;background:var(--gn);box-shadow:0 0 7px var(--gn)}
 
-/* ── KIẾM TIÊN PANEL ── */
-.sword-panel-content { padding:0 16px 120px }
-.sword-mode-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:12px }
-.sword-mode-btn {
-  background:rgba(28,28,45,.7); border:2px solid var(--border); border-radius:14px;
-  padding:14px 10px; cursor:pointer; text-align:center; transition:all .2s; color:var(--tx2);
-  position:relative; overflow:hidden;
-}
-.sword-mode-btn::before { content:''; position:absolute; inset:0;
-  background:linear-gradient(135deg, transparent, rgba(255,201,64,.05));
-  opacity:0; transition:opacity .2s }
-.sword-mode-btn:hover::before, .sword-mode-btn.on::before { opacity:1 }
-.sword-mode-btn.on { border-color:var(--gold); color:var(--gold);
-  box-shadow:0 0 20px rgba(255,201,64,.2) }
-.smb-ico { font-size:1.8rem; display:block; margin-bottom:4px }
-.smb-nm { font-family:'Syne'; font-size:.78rem; font-weight:700; letter-spacing:1px }
-.smb-desc { font-family:'Syne Mono'; font-size:.44rem; letter-spacing:.5px; color:var(--tx3);
-  margin-top:2px; line-height:1.5 }
-.sword-mode-btn.on .smb-desc { color:rgba(255,201,64,.6) }
+/* ──── AI CARDS ──── */
+.ai-card{background:rgba(20,20,38,.7);border:1px solid var(--b1);border-radius:12px;padding:11px 14px;margin-bottom:9px}
+.ai-lbl{font-family:var(--font-mono);font-size:.44rem;letter-spacing:2.5px;color:var(--tx3);margin-bottom:3px}
+.ai-val{font-family:var(--font-display);font-size:1.1rem;letter-spacing:2px;color:var(--cy)}
+.ai-val.ok{color:var(--gn)}.ai-val.warn{color:var(--rd)}.ai-val.gd{color:var(--gd)}.ai-val.pu{color:var(--pu)}
+.conf-bar{height:2px;background:var(--b1);border-radius:1px;margin-top:7px;overflow:hidden}
+.conf-fill{height:100%;background:linear-gradient(90deg,var(--cy),var(--pk));border-radius:1px;transition:width .28s}
+.kp-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-top:7px}
+.kp-it{font-family:var(--font-mono);font-size:.42rem;color:var(--tx3);display:flex;align-items:center;gap:4px}
+.kp-d{width:4px;height:4px;border-radius:50%;background:var(--tx3);flex-shrink:0}
+.kp-it.det{color:var(--tx2)}.kp-it.det .kp-d{background:var(--gn)}
 
-.sword-tip {
-  background:rgba(255,201,64,.06); border:1px solid rgba(255,201,64,.2); border-radius:10px;
-  padding:10px 12px; margin-bottom:10px;
-}
-.sword-tip .tip-title { font-family:'Syne'; font-size:.7rem; font-weight:700; color:var(--gold); margin-bottom:6px }
-.sword-tip .tip-item { font-size:.72rem; color:var(--tx2); margin-bottom:4px; display:flex; gap:8px }
-.sword-tip .tip-gest { font-family:'Syne Mono'; font-size:.52rem; color:var(--gold);
-  background:rgba(255,201,64,.1); padding:2px 8px; border-radius:6px; white-space:nowrap }
+/* ──── PRESET GRID ──── */
+.preset-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:9px 0}
+.preset-btn{background:rgba(20,20,38,.8);border:1px solid var(--b1);border-radius:11px;
+  padding:9px 4px;cursor:pointer;text-align:center;transition:all .15s;color:var(--tx2)}
+.preset-btn:hover{border-color:rgba(255,195,64,.4);color:var(--gd);background:rgba(255,195,64,.05)}
+.preset-btn .pi{font-size:.95rem;display:block;margin-bottom:2px}
+.preset-btn .pn{font-family:var(--font-mono);font-size:.42rem;letter-spacing:1px}
 
-.sword-style-row { display:flex; gap:8px; margin-bottom:10px }
-.ss-opt { flex:1; background:rgba(28,28,45,.7); border:1px solid var(--border);
-  border-radius:10px; padding:8px; text-align:center; cursor:pointer; transition:all .15s }
-.ss-opt.on { border-color:var(--gold); background:rgba(255,201,64,.08) }
-.ss-ico { font-size:1.1rem; display:block }
-.ss-lbl { font-family:'Syne Mono'; font-size:.42rem; letter-spacing:1px;
-  color:var(--tx2); margin-top:2px }
-.ss-opt.on .ss-lbl { color:var(--gold) }
+/* ──── SWORD PANEL ──── */
+.sword-mode-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+.sword-mode-btn{background:rgba(20,20,38,.8);border:2px solid var(--b1);border-radius:14px;
+  padding:15px 10px;cursor:pointer;text-align:center;transition:all .2s;color:var(--tx2);position:relative;overflow:hidden}
+.sword-mode-btn::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,transparent,rgba(255,195,64,.05));opacity:0;transition:opacity .2s}
+.sword-mode-btn:hover::before,.sword-mode-btn.on::before{opacity:1}
+.sword-mode-btn.on{border-color:var(--gd);color:var(--gd);box-shadow:0 0 22px rgba(255,195,64,.22)}
+.smb-ico{font-size:1.75rem;display:block;margin-bottom:4px}
+.smb-nm{font-family:var(--font-display);font-size:.85rem;letter-spacing:2px}
+.smb-desc{font-family:var(--font-mono);font-size:.42rem;letter-spacing:.5px;color:var(--tx3);margin-top:2px;line-height:1.6}
+.sword-mode-btn.on .smb-desc{color:rgba(255,195,64,.6)}
 
-/* Gallery */
-.gal-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; margin-top:8px }
-.g-item { aspect-ratio:9/16; border-radius:8px; overflow:hidden;
-  border:1px solid var(--border); cursor:pointer; position:relative; transition:all .15s }
-.g-item:hover { transform:scale(1.03) }
-.g-item img, .g-item video { width:100%; height:100%; object-fit:cover }
-.g-tag { position:absolute; top:4px; left:4px; background:rgba(8,8,16,.85);
-  font-family:'Syne Mono'; font-size:.38rem; letter-spacing:1px;
-  padding:2px 5px; border-radius:4px; color:var(--gold) }
-.g-tag.v { background:rgba(255,64,96,.7); color:#fff }
-.g-dl { position:absolute; bottom:0; left:0; right:0; background:rgba(8,8,16,.9);
-  text-align:center; padding:5px; font-family:'Syne Mono'; font-size:.44rem;
-  color:var(--cyan); transform:translateY(100%); transition:transform .15s;
-  border:none; cursor:pointer; letter-spacing:1px; width:100% }
-.g-item:hover .g-dl { transform:translateY(0) }
-.g-vid { width:100%; height:100%; background:rgba(28,28,45,.8);
-  display:flex; align-items:center; justify-content:center; font-size:1.6rem }
-.empty-gal { text-align:center; color:var(--tx3); font-family:'Syne Mono';
-  font-size:.55rem; letter-spacing:2px; padding:28px 0; line-height:3 }
+.sword-tip{background:rgba(255,195,64,.05);border:1px solid rgba(255,195,64,.2);
+  border-radius:11px;padding:11px 13px;margin-bottom:10px}
+.sword-tip .tip-title{font-family:var(--font-display);font-size:.82rem;letter-spacing:2px;color:var(--gd);margin-bottom:7px}
+.sword-tip .tip-item{font-size:.7rem;color:var(--tx2);margin-bottom:5px;display:flex;gap:8px;align-items:center}
+.tip-gest{font-family:var(--font-mono);font-size:.5rem;color:var(--gd);
+  background:rgba(255,195,64,.1);padding:2px 9px;border-radius:6px;white-space:nowrap}
 
-/* AI loading */
-.ai-load { position:absolute; top:60px; left:50%; transform:translateX(-50%);
-  background:rgba(18,18,30,.9); border:1px solid var(--border2); padding:5px 14px;
-  border-radius:99px; font-family:'Syne Mono'; font-size:.52rem; letter-spacing:1px;
-  color:var(--cyan); display:none; align-items:center; gap:7px; backdrop-filter:blur(10px);
-  white-space:nowrap; z-index:50 }
-.ai-load.on { display:flex }
-.ai-load::before { content:''; width:6px; height:6px; border-radius:50%;
-  border:1.5px solid var(--cyan); border-top-color:transparent; animation:spin .6s linear infinite }
-@keyframes spin { to{transform:rotate(360deg)} }
+.sword-style-row{display:flex;gap:7px;margin-bottom:11px}
+.ss-opt{flex:1;background:rgba(20,20,38,.8);border:1px solid var(--b1);
+  border-radius:10px;padding:8px;text-align:center;cursor:pointer;transition:all .15s}
+.ss-opt.on{border-color:var(--gd);background:rgba(255,195,64,.08)}
+.ss-ico{font-size:1.05rem;display:block}
+.ss-lbl{font-family:var(--font-mono);font-size:.4rem;letter-spacing:1px;color:var(--tx2);margin-top:2px}
+.ss-opt.on .ss-lbl{color:var(--gd)}
 
-select { width:100%; background:rgba(18,18,30,.95); border:1px solid var(--border2);
-  color:var(--tx); padding:8px 10px; font-family:'Syne Mono'; font-size:.58rem;
-  letter-spacing:.5px; border-radius:10px; outline:none; cursor:pointer }
-select:focus { border-color:rgba(0,240,255,.4) }
+/* ──── IMAGE UPLOAD PANEL ──── */
+.img-upload-zone{border:2px dashed rgba(168,85,247,.35);border-radius:16px;padding:28px;
+  text-align:center;cursor:pointer;transition:all .2s;background:rgba(168,85,247,.04);margin-bottom:12px}
+.img-upload-zone:hover,.img-upload-zone.drag-over{border-color:var(--pu);background:rgba(168,85,247,.1)}
+.upload-ico{font-size:2.5rem;display:block;margin-bottom:8px}
+.upload-txt{font-family:var(--font-display);font-size:.85rem;letter-spacing:2px;color:var(--pu)}
+.upload-sub{font-family:var(--font-mono);font-size:.46rem;color:var(--tx3);margin-top:4px;letter-spacing:1px}
+.img-thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.img-thumb{aspect-ratio:1;border-radius:10px;overflow:hidden;position:relative;cursor:pointer;
+  border:2px solid transparent;transition:all .18s}
+.img-thumb.selected{border-color:var(--pu);box-shadow:0 0 16px rgba(168,85,247,.4)}
+.img-thumb img{width:100%;height:100%;object-fit:cover}
+.img-thumb .th-del{position:absolute;top:3px;right:3px;background:rgba(7,7,15,.85);
+  border:none;color:var(--rd);font-size:.7rem;width:20px;height:20px;border-radius:50%;
+  cursor:pointer;display:none;align-items:center;justify-content:center}
+.img-thumb:hover .th-del{display:flex}
+.img-effect-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-bottom:10px}
+.img-effect-btn{background:rgba(20,20,38,.8);border:1px solid var(--b1);border-radius:11px;
+  padding:10px 8px;cursor:pointer;text-align:center;transition:all .18s;color:var(--tx2)}
+.img-effect-btn.on{border-color:var(--pu);color:var(--pu);background:rgba(168,85,247,.08)}
+.img-effect-btn .ie-ico{font-size:1.3rem;display:block;margin-bottom:3px}
+.img-effect-btn .ie-nm{font-family:var(--font-mono);font-size:.44rem;letter-spacing:1px}
+.img-status-bar{background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.25);border-radius:10px;
+  padding:8px 12px;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.img-status-dot{width:8px;height:8px;border-radius:50%;background:var(--pu);box-shadow:0 0 8px var(--pu);animation:blink 1.5s infinite;flex-shrink:0}
+.img-status-txt{font-family:var(--font-mono);font-size:.5rem;letter-spacing:1px;color:var(--pu)}
 
-/* Overlay dim for panel */
-.overlay-dim { position:absolute; inset:0; background:rgba(0,0,0,.4);
-  z-index:85; display:none; backdrop-filter:blur(2px) }
-.overlay-dim.on { display:block }
+/* ──── GALLERY ──── */
+.gal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:8px}
+.g-item{aspect-ratio:9/16;border-radius:9px;overflow:hidden;border:1px solid var(--b1);
+  cursor:pointer;position:relative;transition:all .15s}
+.g-item:hover{transform:scale(1.03)}
+.g-item img,.g-item video{width:100%;height:100%;object-fit:cover}
+.g-tag{position:absolute;top:4px;left:4px;background:rgba(7,7,15,.88);
+  font-family:var(--font-mono);font-size:.38rem;letter-spacing:1px;padding:2px 5px;border-radius:4px;color:var(--gd)}
+.g-tag.v{background:rgba(255,53,85,.75);color:#fff}
+.g-dl{position:absolute;bottom:0;left:0;right:0;background:rgba(7,7,15,.92);
+  text-align:center;padding:6px;font-family:var(--font-mono);font-size:.42rem;
+  color:var(--cy);transform:translateY(100%);transition:transform .15s;
+  border:none;cursor:pointer;letter-spacing:1px;width:100%}
+.g-item:hover .g-dl{transform:translateY(0)}
+.empty-gal{text-align:center;color:var(--tx3);font-family:var(--font-mono);
+  font-size:.52rem;letter-spacing:2px;padding:30px 0;line-height:3.5}
+
+select{width:100%;background:rgba(14,14,26,.97);border:1px solid var(--b2);
+  color:var(--tx);padding:9px 11px;font-family:var(--font-mono);font-size:.56rem;
+  letter-spacing:.5px;border-radius:11px;outline:none;cursor:pointer}
+select:focus{border-color:rgba(0,238,255,.4)}
 </style>
 </head>
 <body>
 <div class="app">
 
-  <!-- VIEWPORT -->
-  <div class="viewport">
-    <video id="videoEl" autoplay playsinline muted></video>
-    <canvas id="poseCanvas"></canvas>
-    <canvas id="handCanvas"></canvas>
-    <canvas id="swordCanvas"></canvas>
-
-    <div class="detect-frame" id="detectFrame"></div>
-    <div class="brackets">
-      <div class="brk tl"></div><div class="brk tr"></div>
-      <div class="brk bl"></div><div class="brk br"></div>
-    </div>
-
-    <div class="glitch-ov" id="glitchOv"></div>
-    <div class="scan-ov" id="scanOv"></div>
-    <div class="vignette"></div>
-
-    <div class="fall-ov" id="fallOv">
-      <div class="fall-txt">⚠ NGÃ!</div>
-      <div class="fall-sub">FALL DETECTED</div>
-    </div>
-
-    <div class="no-cam on" id="noCam">
-      <div class="nc-ico">📹</div>
-      <div class="nc-txt">CAMERA OFFLINE</div>
-      <button class="start-btn" onclick="startCam()">KHỞI ĐỘNG</button>
-    </div>
-
-    <div class="gest-hud" id="gestHud">
-      <div class="gest-badge" id="gestBadge">✌ PEACE</div>
-      <div class="gest-action" id="gestAction">Chuyển bộ lọc</div>
-    </div>
-
-    <div class="sword-hud" id="swordHud">
-      <div class="shud-badge"><span>🗡️</span><span id="swordModeTxt">KIẾM TIÊN</span></div>
-      <div class="shud-badge"><span class="dot c"></span><span id="swordStatusTxt">SẴN SÀNG</span></div>
-    </div>
-
-    <div class="flash" id="flash"></div>
-    <div class="timer-d" id="timerD">3</div>
-    <div class="ai-load" id="aiLoad">LOADING AI...</div>
+<!-- VIEWPORT -->
+<div class="viewport">
+  <video id="videoEl" autoplay playsinline muted></video>
+  <canvas id="poseCanvas"></canvas>
+  <canvas id="handCanvas"></canvas>
+  <canvas id="swordCanvas"></canvas>
+  <canvas id="customCanvas"></canvas>
+  <div class="detect-frame" id="detectFrame"></div>
+  <div class="brackets"><div class="brk tl"></div><div class="brk tr"></div><div class="brk bl"></div><div class="brk br"></div></div>
+  <div class="glitch-ov" id="glitchOv"></div>
+  <div class="scan-ov" id="scanOv"></div>
+  <div class="vignette"></div>
+  <div class="fall-ov" id="fallOv"><div class="fall-txt">⚠ NGÃ!</div><div class="fall-sub">FALL DETECTED</div></div>
+  <div class="no-cam on" id="noCam">
+    <div class="nc-ico">📹</div>
+    <div class="nc-txt">CAMERA OFFLINE</div>
+    <button class="start-btn" onclick="startCam()">KHỞI ĐỘNG</button>
   </div>
-
-  <!-- TOP BAR -->
-  <div class="topbar">
-    <div class="top-logo">NEXUS</div>
-    <div class="top-badges">
-      <div class="tbadge live" id="camBadge">
-        <div class="dot" id="camDot"></div>
-        <span id="camSt">OFFLINE</span>
-        <span style="color:var(--tx3)">·</span>
-        <span id="resSt">—</span>
-        <span style="color:var(--tx3)">·</span>
-        <span id="fpsSt">0fps</span>
-      </div>
-      <div class="tbadge rec" id="recBadge" style="display:none">
-        <div class="dot r"></div><span id="recTm">00:00</span>
-      </div>
-    </div>
+  <div class="gest-hud" id="gestHud">
+    <div class="gest-badge" id="gestBadge">READY</div>
+    <div class="gest-action" id="gestAction"></div>
   </div>
-
-  <!-- RIGHT SIDEBAR -->
-  <div class="sidebar-r">
-    <button class="sb-btn" onclick="openPanel('filter')" title="Bộ lọc">
-      <span>🎨</span><span class="sb-lbl">FILTER</span>
-    </button>
-    <button class="sb-btn" id="sbAI" onclick="openPanel('ai')" title="AI">
-      <span>🦴</span><span class="sb-lbl">AI</span>
-    </button>
-    <button class="sb-btn" id="sbSword" onclick="openPanel('sword')" title="Kiếm Tiên">
-      <span>🗡️</span><span class="sb-lbl">KIẾM</span>
-      <div class="sb-notif"></div>
-    </button>
-    <button class="sb-btn" onclick="openPanel('gallery')" title="Thư viện">
-      <span>🖼️</span><span class="sb-lbl">GAL</span>
-    </button>
-    <button class="sb-btn" onclick="openPanel('settings')" title="Cài đặt">
-      <span>⚙️</span><span class="sb-lbl">SET</span>
-    </button>
+  <div class="sword-hud" id="swordHud">
+    <div class="shud-badge"><span>🗡️</span><span id="swordModeTxt">KIẾM TIÊN</span></div>
+    <div class="shud-badge"><span class="dot c"></span><span id="swordStatusTxt">SẴN SÀNG</span></div>
   </div>
+  <div class="flash" id="flash"></div>
+  <div class="timer-d" id="timerD">3</div>
+  <div class="ai-load" id="aiLoad"><span>LOADING AI...</span></div>
+</div>
 
-  <!-- OVERLAY DIM -->
-  <div class="overlay-dim" id="overlayDim" onclick="closeAllPanels()"></div>
-
-  <!-- ── PANELS ── -->
-
-  <!-- FILTER PANEL -->
-  <div class="panel" id="panelFilter">
-    <div class="panel-drag" onclick="closeAllPanels()"></div>
-    <div class="panel-title">
-      <span>🎨 Bộ lọc</span>
-      <button onclick="closeAllPanels()" style="background:none;border:none;color:var(--tx2);font-size:1.2rem;cursor:pointer">×</button>
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="top-logo">NEXUS</div>
+  <div class="top-badges">
+    <div class="tbadge live" id="camBadge">
+      <div class="dot" id="camDot"></div>
+      <span id="camSt">OFFLINE</span><span style="color:var(--tx3)">·</span>
+      <span id="resSt">—</span><span style="color:var(--tx3)">·</span><span id="fpsSt">0fps</span>
     </div>
-    <div class="panel-scroll">
-      <div class="sec-h">ĐIỀU CHỈNH MÀU</div>
-      <div class="sl-row"><div class="sl-top"><span class="sl-nm">Độ sáng</span><span class="sl-v" id="vBri">100%</span></div><input type="range" min="20" max="200" value="100" id="sBri" oninput="updAdj()"></div>
-      <div class="sl-row"><div class="sl-top"><span class="sl-nm">Tương phản</span><span class="sl-v" id="vCon">100%</span></div><input type="range" min="20" max="300" value="100" id="sCon" oninput="updAdj()"></div>
-      <div class="sl-row"><div class="sl-top"><span class="sl-nm">Bão hòa</span><span class="sl-v" id="vSat">100%</span></div><input type="range" min="0" max="400" value="100" id="sSat" oninput="updAdj()"></div>
-      <div class="sl-row"><div class="sl-top"><span class="sl-nm">Làm mờ</span><span class="sl-v" id="vBlr">0px</span></div><input type="range" min="0" max="20" value="0" id="sBlr" oninput="updAdj()"></div>
-      <div class="sl-row"><div class="sl-top"><span class="sl-nm">Xoay màu</span><span class="sl-v" id="vHue">0°</span></div><input type="range" min="0" max="360" value="0" id="sHue" oninput="updAdj()"></div>
-      <div class="sl-row"><div class="sl-top"><span class="sl-nm">Sepia</span><span class="sl-v" id="vSepia">0%</span></div><input type="range" min="0" max="100" value="0" id="sSepia" oninput="updAdj()"></div>
-      <div class="sec-h">3D TRANSFORM</div>
-      <div class="sl-row"><div class="sl-top"><span class="sl-nm">Perspective</span><span class="sl-v gold" id="vPer">800px</span></div><input type="range" class="gold" min="100" max="2000" value="800" id="sPer" oninput="upd3D()"></div>
-      <div class="sl-row"><div class="sl-top"><span class="sl-nm">Tilt X</span><span class="sl-v gold" id="vRx">0°</span></div><input type="range" class="gold" min="-70" max="70" value="0" id="sRx" oninput="upd3D()"></div>
-      <div class="sl-row"><div class="sl-top"><span class="sl-nm">Tilt Y</span><span class="sl-v gold" id="vRy">0°</span></div><input type="range" class="gold" min="-70" max="70" value="0" id="sRy" oninput="upd3D()"></div>
-      <div class="sl-row"><div class="sl-top"><span class="sl-nm">Xoay Z</span><span class="sl-v gold" id="vRz">0°</span></div><input type="range" class="gold" min="-45" max="45" value="0" id="sRz" oninput="upd3D()"></div>
-      <div class="sl-row"><div class="sl-top"><span class="sl-nm">Phóng to</span><span class="sl-v gold" id="vSc">1.0×</span></div><input type="range" class="gold" min="40" max="220" value="100" id="sSc" oninput="upd3D()"></div>
-      <div class="sl-row"><div class="sl-top"><span class="sl-nm">Skew X</span><span class="sl-v pink" id="vSkx">0°</span></div><input type="range" class="pink" min="-30" max="30" value="0" id="sSkx" oninput="upd3D()"></div>
-      <div class="preset-grid">
-        <button class="preset-btn" onclick="p3d('tilt')"><span class="pi">📐</span><span class="pn">TILT</span></button>
-        <button class="preset-btn" onclick="p3d('dutch')"><span class="pi">🎬</span><span class="pn">DUTCH</span></button>
-        <button class="preset-btn" onclick="p3d('fisheye')"><span class="pi">🔍</span><span class="pn">FISHEYE</span></button>
-        <button class="preset-btn" onclick="p3d('warp')"><span class="pi">🌀</span><span class="pn">WARP</span></button>
-        <button class="preset-btn" onclick="p3d('side')"><span class="pi">↗</span><span class="pn">SIDE</span></button>
-        <button class="preset-btn" onclick="p3d('flat')"><span class="pi">⬜</span><span class="pn">RESET</span></button>
-      </div>
-    </div>
-  </div>
-
-  <!-- AI PANEL -->
-  <div class="panel" id="panelAI">
-    <div class="panel-drag" onclick="closeAllPanels()"></div>
-    <div class="panel-title">
-      <span>🦴 AI Nhận diện</span>
-      <button onclick="closeAllPanels()" style="background:none;border:none;color:var(--tx2);font-size:1.2rem;cursor:pointer">×</button>
-    </div>
-    <div class="panel-scroll">
-      <div class="tg-row"><span class="tg-lbl" onclick="togPose()">🦴 Tư thế cơ thể</span><div class="tog" id="tgPose" onclick="togPose()"></div></div>
-      <div class="tg-row"><span class="tg-lbl" onclick="togHand()">✋ Nhận diện tay</span><div class="tog" id="tgHand" onclick="togHand()"></div></div>
-      <div class="tg-row"><span class="tg-lbl" onclick="togGest()">⚡ Cử chỉ thông minh</span><div class="tog" id="tgGest" onclick="togGest()"></div></div>
-      <div class="tg-row"><span class="tg-lbl" onclick="togFall()">⚠ Phát hiện ngã</span><div class="tog" id="tgFall" onclick="togFall()"></div></div>
-      <div class="tg-row"><span class="tg-lbl" onclick="togDots()">🟡 Hiển thị điểm</span><div class="tog" id="tgDots" onclick="togDots()"></div></div>
-      <div class="tg-row"><span class="tg-lbl" onclick="togSkel()">🔗 Hiển thị xương</span><div class="tog" id="tgSkel" onclick="togSkel()"></div></div>
-      <div class="tg-row"><span class="tg-lbl" onclick="togDetectFrame()">⬜ Khung nhận dạng</span><div class="tog" id="tgFrame" onclick="togDetectFrame()"></div></div>
-
-      <div id="aiInfoSec" style="display:none">
-        <div class="sec-h">TRẠNG THÁI</div>
-        <div class="ai-card"><div class="ai-lbl">SỐ NGƯỜI</div><div class="ai-val" id="aiPpl">0</div></div>
-        <div class="ai-card">
-          <div class="ai-lbl">TƯ THẾ</div>
-          <div class="ai-val ok" id="aiPose">—</div>
-          <div class="conf-bar"><div class="conf-fill" id="confBar" style="width:0%"></div></div>
-        </div>
-        <div class="ai-card"><div class="ai-lbl">GÓC CƠ THỂ</div><div class="ai-val" id="aiAngle">—°</div></div>
-        <div class="ai-card" id="handCard" style="display:none">
-          <div class="ai-lbl">CỬ CHỈ HIỆN TẠI</div>
-          <div class="ai-val gold" id="handGest">—</div>
-        </div>
-        <div class="ai-lbl" style="margin:6px 0 5px;font-family:Syne Mono;font-size:.45rem;letter-spacing:2px;color:var(--tx3)">KHỚP PHÁT HIỆN</div>
-        <div class="kp-grid" id="kpGrid"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SWORD PANEL -->
-  <div class="panel" id="panelSword">
-    <div class="panel-drag" onclick="closeAllPanels()"></div>
-    <div class="panel-title">
-      <span>🗡️ Kiếm Tiên</span>
-      <button onclick="closeAllPanels()" style="background:none;border:none;color:var(--tx2);font-size:1.2rem;cursor:pointer">×</button>
-    </div>
-    <div class="panel-scroll sword-panel-content">
-
-      <div class="sword-tip">
-        <div class="tip-title">⚡ Điều khiển cử chỉ tay</div>
-        <div class="tip-item"><span class="tip-gest">🖐 BÀN TAY MỞ</span><span>Phi kiếm tiên</span></div>
-        <div class="tip-item"><span class="tip-gest">✌ PEACE</span><span>Triệu hồi kiếm đôi</span></div>
-        <div class="tip-item"><span class="tip-gest">🤙 HANG LOOSE</span><span>Vũ kiếm – bão kiếm</span></div>
-        <div class="tip-item"><span class="tip-gest">✊ NẮM TAY</span><span>Hộ thể kiếm trận</span></div>
-        <div class="tip-item"><span class="tip-gest">☝ CHỈ TAY</span><span>Theo dõi vị trí tay</span></div>
-      </div>
-
-      <div class="sec-h">CHẾ ĐỘ KIẾM</div>
-      <div class="sword-mode-grid">
-        <div class="sword-mode-btn on" id="smFly" onclick="setSwordMode('fly')">
-          <span class="smb-ico">🗡️</span>
-          <div class="smb-nm">PHI KIẾM</div>
-          <div class="smb-desc">Kiếm bay theo tay</div>
-        </div>
-        <div class="sword-mode-btn" id="smSummon" onclick="setSwordMode('summon')">
-          <span class="smb-ico">⚡</span>
-          <div class="smb-nm">TRIỆU HỒI</div>
-          <div class="smb-desc">Triệu nhiều kiếm</div>
-        </div>
-        <div class="sword-mode-btn" id="smStorm" onclick="setSwordMode('storm')">
-          <span class="smb-ico">🌀</span>
-          <div class="smb-nm">VŨ KIẾM</div>
-          <div class="smb-desc">Bão kiếm xoáy</div>
-        </div>
-        <div class="sword-mode-btn" id="smShield" onclick="setSwordMode('shield')">
-          <span class="smb-ico">🛡️</span>
-          <div class="smb-nm">HỘ THỂ</div>
-          <div class="smb-desc">Kiếm trận bảo vệ</div>
-        </div>
-      </div>
-
-      <div class="sec-h">PHONG CÁCH KIẾM</div>
-      <div class="sword-style-row">
-        <div class="ss-opt on" id="styleClassic" onclick="setSwordStyle('classic')">
-          <span class="ss-ico">⚔️</span><div class="ss-lbl">THẦN KIẾM</div>
-        </div>
-        <div class="ss-opt" id="styleFire" onclick="setSwordStyle('fire')">
-          <span class="ss-ico">🔥</span><div class="ss-lbl">HỎA KIẾM</div>
-        </div>
-        <div class="ss-opt" id="styleIce" onclick="setSwordStyle('ice')">
-          <span class="ss-ico">❄️</span><div class="ss-lbl">BĂNG KIẾM</div>
-        </div>
-        <div class="ss-opt" id="styleLight" onclick="setSwordStyle('light')">
-          <span class="ss-ico">⚡</span><div class="ss-lbl">LÔI KIẾM</div>
-        </div>
-      </div>
-
-      <div class="sec-h">ĐIỀU CHỈNH</div>
-      <div class="sl-row"><div class="sl-top"><span class="sl-nm">Tốc độ kiếm</span><span class="sl-v gold" id="vSwordSpeed">5</span></div><input type="range" class="gold" min="1" max="10" value="5" id="sSwordSpeed" oninput="updSword()"></div>
-      <div class="sl-row"><div class="sl-top"><span class="sl-nm">Kích thước</span><span class="sl-v gold" id="vSwordSize">100%</span></div><input type="range" class="gold" min="40" max="200" value="100" id="sSwordSize" oninput="updSword()"></div>
-      <div class="sl-row"><div class="sl-top"><span class="sl-nm">Độ sáng quang hào</span><span class="sl-v gold" id="vSwordGlow">70%</span></div><input type="range" class="gold" min="0" max="100" value="70" id="sSwordGlow" oninput="updSword()"></div>
-      <div class="sl-row"><div class="sl-top"><span class="sl-nm">Số lượng (triệu hồi)</span><span class="sl-v gold" id="vSwordCount">5</span></div><input type="range" class="gold" min="2" max="12" value="5" id="sSwordCount" oninput="updSword()"></div>
-
-      <div class="sec-h">TRẠNG THÁI</div>
-      <div class="tg-row"><span class="tg-lbl" onclick="togSwordMode()">🗡️ Bật chế độ Kiếm Tiên</span><div class="tog" id="tgSwordMain" onclick="togSwordMode()"></div></div>
-      <div class="tg-row"><span class="tg-lbl">✨ Hiệu ứng hạt quang tử</span><div class="tog on" id="tgParticles" onclick="this.classList.toggle('on')"></div></div>
-      <div class="tg-row"><span class="tg-lbl">🎇 Trail kiếm khí</span><div class="tog on" id="tgTrail" onclick="this.classList.toggle('on')"></div></div>
-    </div>
-  </div>
-
-  <!-- GALLERY PANEL -->
-  <div class="panel" id="panelGallery">
-    <div class="panel-drag" onclick="closeAllPanels()"></div>
-    <div class="panel-title">
-      <span>🖼️ Thư viện <span id="galCntBig" style="color:var(--pink);font-size:.8rem">0</span></span>
-      <button onclick="closeAllPanels()" style="background:none;border:none;color:var(--tx2);font-size:1.2rem;cursor:pointer">×</button>
-    </div>
-    <div class="panel-scroll">
-      <div id="emptyGal" class="empty-gal">Trống<br>📸 Chụp · ⏺ Quay</div>
-      <div class="gal-grid" id="galGrid"></div>
-    </div>
-  </div>
-
-  <!-- SETTINGS PANEL -->
-  <div class="panel" id="panelSettings">
-    <div class="panel-drag" onclick="closeAllPanels()"></div>
-    <div class="panel-title">
-      <span>⚙️ Cài đặt</span>
-      <button onclick="closeAllPanels()" style="background:none;border:none;color:var(--tx2);font-size:1.2rem;cursor:pointer">×</button>
-    </div>
-    <div class="panel-scroll">
-      <div class="sec-h">CAMERA</div>
-      <select id="resSel" onchange="changeRes()">
-        <option value="4k">4K UHD · 3840×2160</option>
-        <option value="1440p">2K QHD · 2560×1440</option>
-        <option value="1080p" selected>Full HD · 1920×1080</option>
-        <option value="720p">HD · 1280×720</option>
-      </select>
-      <div style="height:10px"></div>
-      <button onclick="switchCam()" style="width:100%;padding:10px;background:rgba(28,28,45,.7);border:1px solid var(--border);border-radius:10px;color:var(--tx);cursor:pointer;font-family:DM Sans;font-size:.82rem">🔄 Đổi Camera</button>
-      <div class="sec-h">ĐIỀU KHIỂN</div>
-      <div class="tg-row"><span class="tg-lbl" onclick="togGrid()">⊞ Lưới hướng dẫn</span><div class="tog" id="tgGridS" onclick="togGrid()"></div></div>
-      <div class="tg-row"><span class="tg-lbl" onclick="togTimer()">⏱ Đếm ngược 3s</span><div class="tog" id="tgTimerS" onclick="togTimer()"></div></div>
-      <div class="tg-row"><span class="tg-lbl" onclick="togMirror()">⟺ Lật gương</span><div class="tog" id="tgMirrorS" onclick="togMirror()"></div></div>
-      <div style="height:10px"></div>
-      <button onclick="resetAll()" style="width:100%;padding:10px;background:rgba(255,45,120,.08);border:1px solid rgba(255,45,120,.25);border-radius:10px;color:var(--pink);cursor:pointer;font-family:DM Sans;font-size:.82rem">↺ Đặt lại tất cả</button>
-    </div>
-  </div>
-
-  <!-- BOTTOM AREA -->
-  <div class="bottom-area">
-    <!-- Filter chips row -->
-    <div class="filter-row" id="fxRow"></div>
-
-    <!-- Shutter zone -->
-    <div class="shutter-zone">
-      <!-- Left controls -->
-      <div class="ctrl-side">
-        <button class="cs-btn" id="btnMirror" onclick="togMirror()" title="Lật [M]">⟺</button>
-        <span class="cs-lbl">LẬT</span>
-      </div>
-      <div class="ctrl-side">
-        <button class="cs-btn" id="btnTimer" onclick="togTimer()" title="Hẹn giờ [T]">⏱</button>
-        <span class="cs-lbl">HẸN GIỜ</span>
-      </div>
-
-      <!-- Shutter -->
-      <div class="shutter-wrap">
-        <div class="shutter-ring" id="shutterRing" onclick="doSnap()">
-          <div class="shutter-inner" id="shutterInner">
-            <span class="shutter-ico" id="shutterIco">📸</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Right controls -->
-      <div class="ctrl-side">
-        <button class="rec-btn cs-btn" id="recBtn" onclick="togRec()" title="Quay [R]"
-          style="border:2px solid rgba(255,64,96,.4);color:var(--rd)">⏺</button>
-        <span class="cs-lbl">QUAY</span>
-      </div>
-      <div class="ctrl-side">
-        <button class="cs-btn" onclick="togFS()" title="Toàn màn hình">⛶</button>
-        <span class="cs-lbl">FULL</span>
-      </div>
-    </div>
-
-    <!-- Tab bar -->
-    <div class="tab-bar" id="tabBar">
-      <div class="tab-item on" id="tabNormal" onclick="setTab('normal')">
-        <span class="ti-ico">🎯</span><span class="ti-lbl">THƯỜNG</span>
-      </div>
-      <div class="tab-item" id="tabFilter" onclick="openPanel('filter')">
-        <span class="ti-ico">🎨</span><span class="ti-lbl">HIỆU ỨNG</span>
-      </div>
-      <div class="tab-item" id="tabAI" onclick="openPanel('ai')">
-        <span class="ti-ico">🤖</span><span class="ti-lbl">AI</span>
-      </div>
-      <div class="tab-item" id="tabSword" onclick="openPanel('sword')">
-        <span class="ti-ico">🗡️</span><span class="ti-lbl">KIẾM TIÊN</span>
-      </div>
+    <div class="tbadge rec" id="recBadge" style="display:none">
+      <div class="dot r"></div><span id="recTm">00:00</span>
     </div>
   </div>
 </div>
 
-<!-- Hidden canvas for capture -->
+<!-- RIGHT SIDEBAR -->
+<div class="sidebar-r">
+  <button class="sb-btn" onclick="openPanel('filter')" title="Bộ lọc"><span>🎨</span><span class="sb-lbl">FILTER</span></button>
+  <button class="sb-btn" id="sbAI" onclick="openPanel('ai')" title="AI"><span>🦴</span><span class="sb-lbl">AI</span></button>
+  <button class="sb-btn" id="sbSword" onclick="openPanel('sword')" title="Kiếm Tiên"><span>🗡️</span><span class="sb-lbl">KIẾM</span><div class="sb-notif"></div></button>
+  <button class="sb-btn" id="sbImg" onclick="openPanel('image')" title="Ảnh tùy chỉnh"><span>🖼️</span><span class="sb-lbl">ẢNH</span></button>
+  <button class="sb-btn" onclick="openPanel('gallery')" title="Thư viện"><span>📁</span><span class="sb-lbl">GAL</span></button>
+  <button class="sb-btn" onclick="openPanel('settings')" title="Cài đặt"><span>⚙️</span><span class="sb-lbl">SET</span></button>
+</div>
+
+<!-- OVERLAY DIM -->
+<div class="overlay-dim" id="overlayDim" onclick="closeAllPanels()"></div>
+
+<!-- ─── PANEL: FILTER ─── -->
+<div class="panel" id="panelFilter">
+  <div class="panel-drag" onclick="closeAllPanels()"></div>
+  <div class="panel-title">🎨 BỘ LỌC<button class="panel-close" onclick="closeAllPanels()">×</button></div>
+  <div class="panel-scroll">
+    <div class="sec-h">MÀU SẮC</div>
+    <div class="sl-row"><div class="sl-top"><span class="sl-nm">Độ sáng</span><span class="sl-v cy" id="vBri">100%</span></div><input type="range" min="20" max="200" value="100" id="sBri" oninput="updAdj()"></div>
+    <div class="sl-row"><div class="sl-top"><span class="sl-nm">Tương phản</span><span class="sl-v cy" id="vCon">100%</span></div><input type="range" min="20" max="300" value="100" id="sCon" oninput="updAdj()"></div>
+    <div class="sl-row"><div class="sl-top"><span class="sl-nm">Bão hòa</span><span class="sl-v cy" id="vSat">100%</span></div><input type="range" min="0" max="400" value="100" id="sSat" oninput="updAdj()"></div>
+    <div class="sl-row"><div class="sl-top"><span class="sl-nm">Làm mờ</span><span class="sl-v cy" id="vBlr">0px</span></div><input type="range" min="0" max="20" value="0" id="sBlr" oninput="updAdj()"></div>
+    <div class="sl-row"><div class="sl-top"><span class="sl-nm">Xoay màu</span><span class="sl-v cy" id="vHue">0°</span></div><input type="range" min="0" max="360" value="0" id="sHue" oninput="updAdj()"></div>
+    <div class="sl-row"><div class="sl-top"><span class="sl-nm">Sepia</span><span class="sl-v cy" id="vSepia">0%</span></div><input type="range" min="0" max="100" value="0" id="sSepia" oninput="updAdj()"></div>
+    <div class="sec-h">3D TRANSFORM</div>
+    <div class="sl-row"><div class="sl-top"><span class="sl-nm">Perspective</span><span class="sl-v gd" id="vPer">800px</span></div><input type="range" class="gd" min="100" max="2000" value="800" id="sPer" oninput="upd3D()"></div>
+    <div class="sl-row"><div class="sl-top"><span class="sl-nm">Tilt X</span><span class="sl-v gd" id="vRx">0°</span></div><input type="range" class="gd" min="-70" max="70" value="0" id="sRx" oninput="upd3D()"></div>
+    <div class="sl-row"><div class="sl-top"><span class="sl-nm">Tilt Y</span><span class="sl-v gd" id="vRy">0°</span></div><input type="range" class="gd" min="-70" max="70" value="0" id="sRy" oninput="upd3D()"></div>
+    <div class="sl-row"><div class="sl-top"><span class="sl-nm">Xoay Z</span><span class="sl-v gd" id="vRz">0°</span></div><input type="range" class="gd" min="-45" max="45" value="0" id="sRz" oninput="upd3D()"></div>
+    <div class="sl-row"><div class="sl-top"><span class="sl-nm">Phóng to</span><span class="sl-v gd" id="vSc">1.0×</span></div><input type="range" class="gd" min="40" max="220" value="100" id="sSc" oninput="upd3D()"></div>
+    <div class="sl-row"><div class="sl-top"><span class="sl-nm">Skew X</span><span class="sl-v pk" id="vSkx">0°</span></div><input type="range" class="pk" min="-30" max="30" value="0" id="sSkx" oninput="upd3D()"></div>
+    <div class="preset-grid">
+      <button class="preset-btn" onclick="p3d('tilt')"><span class="pi">📐</span><span class="pn">TILT</span></button>
+      <button class="preset-btn" onclick="p3d('dutch')"><span class="pi">🎬</span><span class="pn">DUTCH</span></button>
+      <button class="preset-btn" onclick="p3d('fisheye')"><span class="pi">🔍</span><span class="pn">FISHEYE</span></button>
+      <button class="preset-btn" onclick="p3d('warp')"><span class="pi">🌀</span><span class="pn">WARP</span></button>
+      <button class="preset-btn" onclick="p3d('side')"><span class="pi">↗</span><span class="pn">SIDE</span></button>
+      <button class="preset-btn" onclick="p3d('flat')"><span class="pi">⬜</span><span class="pn">RESET</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── PANEL: AI ─── -->
+<div class="panel" id="panelAI">
+  <div class="panel-drag" onclick="closeAllPanels()"></div>
+  <div class="panel-title">🦴 AI NHẬN DIỆN<button class="panel-close" onclick="closeAllPanels()">×</button></div>
+  <div class="panel-scroll">
+    <div class="tg-row"><span class="tg-lbl" onclick="togPose()">🦴 Tư thế cơ thể</span><div class="tog" id="tgPose" onclick="togPose()"></div></div>
+    <div class="tg-row"><span class="tg-lbl" onclick="togHand()">✋ Nhận diện tay</span><div class="tog" id="tgHand" onclick="togHand()"></div></div>
+    <div class="tg-row"><span class="tg-lbl" onclick="togGest()">⚡ Cử chỉ thông minh</span><div class="tog" id="tgGest" onclick="togGest()"></div></div>
+    <div class="tg-row"><span class="tg-lbl" onclick="togFall()">⚠ Phát hiện ngã</span><div class="tog" id="tgFall" onclick="togFall()"></div></div>
+    <div class="tg-row"><span class="tg-lbl" onclick="togDots()">🟡 Hiển thị điểm</span><div class="tog" id="tgDots" onclick="togDots()"></div></div>
+    <div class="tg-row"><span class="tg-lbl" onclick="togSkel()">🔗 Hiển thị xương</span><div class="tog" id="tgSkel" onclick="togSkel()"></div></div>
+    <div class="tg-row"><span class="tg-lbl" onclick="togDetectFrame()">⬜ Khung nhận dạng</span><div class="tog" id="tgFrame" onclick="togDetectFrame()"></div></div>
+    <div id="aiInfoSec" style="display:none">
+      <div class="sec-h">TRẠNG THÁI</div>
+      <div class="ai-card"><div class="ai-lbl">SỐ NGƯỜI</div><div class="ai-val" id="aiPpl">0</div></div>
+      <div class="ai-card"><div class="ai-lbl">TƯ THẾ</div><div class="ai-val ok" id="aiPose">—</div><div class="conf-bar"><div class="conf-fill" id="confBar" style="width:0%"></div></div></div>
+      <div class="ai-card"><div class="ai-lbl">GÓC CƠ THỂ</div><div class="ai-val" id="aiAngle">—°</div></div>
+      <div class="ai-card" id="handCard" style="display:none"><div class="ai-lbl">CỬ CHỈ HIỆN TẠI</div><div class="ai-val gd" id="handGest">—</div></div>
+      <div class="ai-lbl" style="margin:6px 0 5px;font-family:var(--font-mono);font-size:.42rem;letter-spacing:2px;color:var(--tx3)">KHỚP PHÁT HIỆN</div>
+      <div class="kp-grid" id="kpGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── PANEL: SWORD ─── -->
+<div class="panel" id="panelSword">
+  <div class="panel-drag" onclick="closeAllPanels()"></div>
+  <div class="panel-title">🗡️ KIẾM TIÊN<button class="panel-close" onclick="closeAllPanels()">×</button></div>
+  <div class="panel-scroll">
+    <div class="sword-tip">
+      <div class="tip-title">⚡ CỬ CHỈ ĐIỀU KHIỂN</div>
+      <div class="tip-item"><span class="tip-gest">🖐 BÀN TAY MỞ</span><span>Phi kiếm tiên / Ném ảnh</span></div>
+      <div class="tip-item"><span class="tip-gest">✌ PEACE</span><span>Triệu hồi kiếm đôi</span></div>
+      <div class="tip-item"><span class="tip-gest">🤙 HANG LOOSE</span><span>Bão kiếm xoáy</span></div>
+      <div class="tip-item"><span class="tip-gest">✊ NẮM TAY</span><span>Hộ thể kiếm trận</span></div>
+      <div class="tip-item"><span class="tip-gest">☝ CHỈ TAY</span><span>Phi kiếm – theo dõi</span></div>
+    </div>
+    <div class="sec-h">CHẾ ĐỘ</div>
+    <div class="sword-mode-grid">
+      <div class="sword-mode-btn on" id="smFly" onclick="setSwordMode('fly')"><span class="smb-ico">🗡️</span><div class="smb-nm">PHI KIẾM</div><div class="smb-desc">Bay theo tay</div></div>
+      <div class="sword-mode-btn" id="smSummon" onclick="setSwordMode('summon')"><span class="smb-ico">⚡</span><div class="smb-nm">TRIỆU HỒI</div><div class="smb-desc">Vạn kiếm quy tụ</div></div>
+      <div class="sword-mode-btn" id="smStorm" onclick="setSwordMode('storm')"><span class="smb-ico">🌀</span><div class="smb-nm">VŨ KIẾM</div><div class="smb-desc">Bão kiếm xoáy</div></div>
+      <div class="sword-mode-btn" id="smShield" onclick="setSwordMode('shield')"><span class="smb-ico">🛡️</span><div class="smb-nm">HỘ THỂ</div><div class="smb-desc">Kiếm trận bảo vệ</div></div>
+    </div>
+    <div class="sec-h">PHONG CÁCH</div>
+    <div class="sword-style-row">
+      <div class="ss-opt on" id="styleClassic" onclick="setSwordStyle('classic')"><span class="ss-ico">⚔️</span><div class="ss-lbl">THẦN</div></div>
+      <div class="ss-opt" id="styleFire" onclick="setSwordStyle('fire')"><span class="ss-ico">🔥</span><div class="ss-lbl">HỎA</div></div>
+      <div class="ss-opt" id="styleIce" onclick="setSwordStyle('ice')"><span class="ss-ico">❄️</span><div class="ss-lbl">BĂNG</div></div>
+      <div class="ss-opt" id="styleLight" onclick="setSwordStyle('light')"><span class="ss-ico">⚡</span><div class="ss-lbl">LÔI</div></div>
+    </div>
+    <div class="sec-h">ĐIỀU CHỈNH</div>
+    <div class="sl-row"><div class="sl-top"><span class="sl-nm">Tốc độ</span><span class="sl-v gd" id="vSwordSpeed">5</span></div><input type="range" class="gd" min="1" max="10" value="5" id="sSwordSpeed" oninput="updSword()"></div>
+    <div class="sl-row"><div class="sl-top"><span class="sl-nm">Kích thước</span><span class="sl-v gd" id="vSwordSize">100%</span></div><input type="range" class="gd" min="40" max="200" value="100" id="sSwordSize" oninput="updSword()"></div>
+    <div class="sl-row"><div class="sl-top"><span class="sl-nm">Quang hào</span><span class="sl-v gd" id="vSwordGlow">70%</span></div><input type="range" class="gd" min="0" max="100" value="70" id="sSwordGlow" oninput="updSword()"></div>
+    <div class="sl-row"><div class="sl-top"><span class="sl-nm">Số kiếm (triệu hồi)</span><span class="sl-v gd" id="vSwordCount">5</span></div><input type="range" class="gd" min="2" max="12" value="5" id="sSwordCount" oninput="updSword()"></div>
+    <div class="sec-h">BẬT / TẮT</div>
+    <div class="tg-row"><span class="tg-lbl" onclick="togSwordMode()">🗡️ Chế độ Kiếm Tiên</span><div class="tog" id="tgSwordMain" onclick="togSwordMode()"></div></div>
+    <div class="tg-row"><span class="tg-lbl">✨ Hạt quang tử</span><div class="tog on" id="tgParticles" onclick="this.classList.toggle('on')"></div></div>
+    <div class="tg-row"><span class="tg-lbl">🎇 Trail kiếm khí</span><div class="tog on" id="tgTrail" onclick="this.classList.toggle('on')"></div></div>
+  </div>
+</div>
+
+<!-- ─── PANEL: IMAGE ─── -->
+<div class="panel" id="panelImage">
+  <div class="panel-drag" onclick="closeAllPanels()"></div>
+  <div class="panel-title">🖼️ ẢNH TÙY CHỈNH<button class="panel-close" onclick="closeAllPanels()">×</button></div>
+  <div class="panel-scroll">
+    <div id="imgStatusBar" class="img-status-bar" style="display:none">
+      <div class="img-status-dot"></div>
+      <div class="img-status-txt" id="imgStatusTxt">ẢNH ĐANG HOẠT ĐỘNG · Cử chỉ tay để điều khiển</div>
+    </div>
+    <div class="img-upload-zone" id="imgUploadZone" onclick="imgFileInput.click()" ondrop="handleImgDrop(event)" ondragover="e=>e.preventDefault()">
+      <span class="upload-ico">📤</span>
+      <div class="upload-txt">TẢI ẢNH LÊN</div>
+      <div class="upload-sub">JPG · PNG · WEBP · GIF</div>
+    </div>
+    <input type="file" id="imgFileInput" accept="image/*" multiple style="display:none" onchange="handleImgFiles(this.files)">
+    <div class="img-thumbs" id="imgThumbs"></div>
+    <div class="sec-h">HIỆU ỨNG ẢNH</div>
+    <div class="img-effect-grid">
+      <div class="img-effect-btn on" id="ieFloat" onclick="setImgEffect('float')"><span class="ie-ico">🌊</span><span class="ie-nm">LƠ LỬNG</span></div>
+      <div class="img-effect-btn" id="ieOrbit" onclick="setImgEffect('orbit')"><span class="ie-ico">🪐</span><span class="ie-nm">QUỸ ĐẠO</span></div>
+      <div class="img-effect-btn" id="ieShoot" onclick="setImgEffect('shoot')"><span class="ie-ico">🚀</span><span class="ie-nm">PHI THÂN</span></div>
+      <div class="img-effect-btn" id="ieSpiral" onclick="setImgEffect('spiral')"><span class="ie-ico">🌀</span><span class="ie-nm">XOÁY ỐC</span></div>
+    </div>
+    <div class="sec-h">ĐIỀU CHỈNH</div>
+    <div class="sl-row"><div class="sl-top"><span class="sl-nm">Kích thước ảnh</span><span class="sl-v pu" id="vImgSize">80%</span></div><input type="range" class="pu" min="20" max="200" value="80" id="sImgSize" oninput="updImg()"></div>
+    <div class="sl-row"><div class="sl-top"><span class="sl-nm">Độ trong suốt</span><span class="sl-v pu" id="vImgAlpha">90%</span></div><input type="range" class="pu" min="10" max="100" value="90" id="sImgAlpha" oninput="updImg()"></div>
+    <div class="sl-row"><div class="sl-top"><span class="sl-nm">Tốc độ chuyển động</span><span class="sl-v pu" id="vImgSpeed">5</span></div><input type="range" class="pu" min="1" max="10" value="5" id="sImgSpeed" oninput="updImg()"></div>
+    <div class="sec-h">BẬT / TẮT</div>
+    <div class="tg-row"><span class="tg-lbl" onclick="togImgMode()">🖼️ Chế độ ảnh tùy chỉnh</span><div class="tog" id="tgImgMain" onclick="togImgMode()"></div></div>
+    <div class="tg-row"><span class="tg-lbl">✨ Hiệu ứng phát sáng</span><div class="tog on" id="tgImgGlow" onclick="this.classList.toggle('on')"></div></div>
+    <div class="tg-row"><span class="tg-lbl">🌀 Xoay tự động</span><div class="tog" id="tgImgRotate" onclick="this.classList.toggle('on')"></div></div>
+  </div>
+</div>
+
+<!-- ─── PANEL: GALLERY ─── -->
+<div class="panel" id="panelGallery">
+  <div class="panel-drag" onclick="closeAllPanels()"></div>
+  <div class="panel-title">📁 THƯ VIỆN <span id="galCntBig" style="color:var(--pk);font-size:.85rem">0</span><button class="panel-close" onclick="closeAllPanels()">×</button></div>
+  <div class="panel-scroll">
+    <div id="emptyGal" class="empty-gal">Trống<br>📸 Chụp · ⏺ Quay</div>
+    <div class="gal-grid" id="galGrid"></div>
+  </div>
+</div>
+
+<!-- ─── PANEL: SETTINGS ─── -->
+<div class="panel" id="panelSettings">
+  <div class="panel-drag" onclick="closeAllPanels()"></div>
+  <div class="panel-title">⚙️ CÀI ĐẶT<button class="panel-close" onclick="closeAllPanels()">×</button></div>
+  <div class="panel-scroll">
+    <div class="sec-h">CAMERA</div>
+    <select id="resSel" onchange="changeRes()">
+      <option value="4k">4K UHD · 3840×2160</option>
+      <option value="1440p">2K QHD · 2560×1440</option>
+      <option value="1080p" selected>Full HD · 1920×1080</option>
+      <option value="720p">HD · 1280×720</option>
+    </select>
+    <div style="height:10px"></div>
+    <button onclick="switchCam()" style="width:100%;padding:10px;background:rgba(20,20,38,.8);border:1px solid var(--b1);border-radius:11px;color:var(--tx);cursor:pointer;font-family:var(--font-body);font-size:.8rem">🔄 Đổi Camera</button>
+    <div class="sec-h">ĐIỀU KHIỂN</div>
+    <div class="tg-row"><span class="tg-lbl" onclick="togTimer()">⏱ Đếm ngược 3s</span><div class="tog" id="tgTimerS" onclick="togTimer()"></div></div>
+    <div class="tg-row"><span class="tg-lbl" onclick="togMirror()">⟺ Lật gương</span><div class="tog" id="tgMirrorS" onclick="togMirror()"></div></div>
+    <div style="height:10px"></div>
+    <button onclick="resetAll()" style="width:100%;padding:10px;background:rgba(255,32,96,.08);border:1px solid rgba(255,32,96,.25);border-radius:11px;color:var(--pk);cursor:pointer;font-family:var(--font-body);font-size:.8rem">↺ Đặt lại tất cả</button>
+  </div>
+</div>
+
+<!-- BOTTOM AREA -->
+<div class="bottom-area">
+  <!-- FILTER CHIPS -->
+  <div class="filter-row" id="fxRow"></div>
+
+  <!-- QUICK TOGGLES -->
+  <div class="qtog-row" id="qtogRow">
+    <button class="qt-btn" id="qtPose" onclick="togPose()"><span class="qt-ico">🦴</span>POSE AI</button>
+    <button class="qt-btn" id="qtHand" onclick="togHand()"><span class="qt-ico">✋</span>HAND AI</button>
+    <button class="qt-btn" id="qtGest" onclick="togGest()"><span class="qt-ico">⚡</span>GESTURE</button>
+    <button class="qt-btn" id="qtSword" onclick="togSwordMode()"><span class="qt-ico">🗡️</span>KIẾM</button>
+    <button class="qt-btn" id="qtImg" onclick="togImgMode()"><span class="qt-ico">🖼️</span>ẢNH</button>
+    <button class="qt-btn" id="qtGlitch" onclick="qtTogGlitch()"><span class="qt-ico">⚡</span>GLITCH</button>
+    <button class="qt-btn" id="qtScan" onclick="qtTogScan()"><span class="qt-ico">📺</span>SCAN</button>
+  </div>
+
+  <!-- SHUTTER -->
+  <div class="shutter-zone">
+    <div class="ctrl-side">
+      <button class="cs-btn" id="btnMirror" onclick="togMirror()" title="Lật">⟺</button>
+      <span class="cs-lbl">LẬT</span>
+    </div>
+    <div class="ctrl-side">
+      <button class="cs-btn" id="btnTimer" onclick="togTimer()" title="Hẹn giờ">⏱</button>
+      <span class="cs-lbl">HẸN GIỜ</span>
+    </div>
+    <div class="shutter-wrap">
+      <div class="shutter-ring" id="shutterRing" onclick="doSnap()">
+        <div class="shutter-inner" id="shutterInner">
+          <span class="shutter-ico" id="shutterIco">📸</span>
+        </div>
+      </div>
+    </div>
+    <div class="ctrl-side">
+      <button class="cs-btn" id="recBtn" onclick="togRec()" style="border:2px solid rgba(255,53,85,.4);color:var(--rd)">⏺</button>
+      <span class="cs-lbl">QUAY</span>
+    </div>
+    <div class="ctrl-side">
+      <button class="cs-btn" onclick="togFS()">⛶</button>
+      <span class="cs-lbl">FULL</span>
+    </div>
+  </div>
+
+  <!-- TAB BAR -->
+  <div class="tab-bar">
+    <div class="tab-item on" id="tabNormal" onclick="setTab('normal')"><span class="ti-ico">🎯</span><span class="ti-lbl">THƯỜNG</span></div>
+    <div class="tab-item" id="tabFilter" onclick="openPanel('filter')"><span class="ti-ico">🎨</span><span class="ti-lbl">HIỆU ỨNG</span></div>
+    <div class="tab-item" id="tabAI" onclick="openPanel('ai')"><span class="ti-ico">🤖</span><span class="ti-lbl">AI</span></div>
+    <div class="tab-item" id="tabSword" onclick="openPanel('sword')"><span class="ti-ico">🗡️</span><span class="ti-lbl">KIẾM TIÊN</span></div>
+    <div class="tab-item" id="tabImg" onclick="openPanel('image')"><span class="ti-ico">🖼️</span><span class="ti-lbl">ẢNH</span></div>
+  </div>
+</div>
+
 <canvas id="capCanvas" style="display:none"></canvas>
 
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
@@ -758,214 +678,172 @@ select:focus { border-color:rgba(0,240,255,.4) }
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection@2.0.1/dist/hand-pose-detection.min.js"></script>
 
 <script>
-// ══════════════════════════════════════════════
+// ════════════════════════════════════
 // FILTERS
-// ══════════════════════════════════════════════
-const FILTERS = [
-  {id:'none',     icon:'🎯', nm:'THƯỜNG',   css:'none',                                             special:null},
-  {id:'mono',     icon:'🎞', nm:'MONO',      css:'grayscale(100%)',                                  special:null},
-  {id:'vintage',  icon:'📷', nm:'VINTAGE',   css:'sepia(90%) saturate(150%)',                        special:null},
-  {id:'vivid',    icon:'🎨', nm:'VIVID',     css:'saturate(320%) contrast(115%)',                    special:null},
-  {id:'golden',   icon:'🌅', nm:'GOLDEN',    css:'sepia(55%) hue-rotate(-25deg) saturate(220%)',     special:null},
-  {id:'neon',     icon:'🔵', nm:'NEON',      css:'hue-rotate(175deg) saturate(350%) brightness(125%)',special:null},
-  {id:'cyber',    icon:'💜', nm:'CYBER',     css:'hue-rotate(240deg) saturate(280%) brightness(115%)',special:null},
-  {id:'vaporwave',icon:'🌆', nm:'VAPOR',     css:'hue-rotate(285deg) saturate(450%) brightness(110%)',special:null},
-  {id:'matrix',   icon:'🟢', nm:'MATRIX',    css:'hue-rotate(90deg) saturate(220%)',                 special:null},
-  {id:'infrared', icon:'🔴', nm:'INFRA',     css:'invert(85%) hue-rotate(175deg) saturate(420%)',    special:null},
-  {id:'fire',     icon:'🔥', nm:'FIRE',      css:'hue-rotate(-25deg) saturate(450%) contrast(128%)', special:null},
-  {id:'ice',      icon:'🧊', nm:'ICE',       css:'hue-rotate(185deg) saturate(170%) brightness(125%)',special:null},
-  {id:'dreamy',   icon:'✨', nm:'DREAMY',    css:'brightness(135%) contrast(75%) saturate(130%) blur(.5px)',special:null},
-  {id:'noir',     icon:'🌑', nm:'NOIR',      css:'contrast(210%) brightness(75%)',                   special:null},
-  {id:'film',     icon:'🏛', nm:'FILM',      css:'contrast(145%) saturate(55%) sepia(28%)',          special:null},
-  {id:'acid',     icon:'🧪', nm:'ACID',      css:'hue-rotate(125deg) saturate(550%) contrast(160%)', special:null},
-  {id:'glitch',   icon:'⚡', nm:'GLITCH',    css:'none',                                             special:'glitch'},
-  {id:'scanlines',icon:'📺', nm:'SCAN',      css:'none',                                             special:'scanlines'},
-  {id:'deepfry',  icon:'🍳', nm:'DEEPFRY',   css:'contrast(450%) saturate(550%) brightness(125%)',   special:null},
-  {id:'sunset',   icon:'🌄', nm:'SUNSET',    css:'sepia(40%) hue-rotate(10deg) saturate(300%)',      special:null},
+// ════════════════════════════════════
+const FILTERS=[
+  {id:'none',icon:'🎯',nm:'THƯỜNG',css:'none',special:null},
+  {id:'mono',icon:'🎞',nm:'MONO',css:'grayscale(100%)',special:null},
+  {id:'vintage',icon:'📷',nm:'VINTAGE',css:'sepia(90%) saturate(150%)',special:null},
+  {id:'vivid',icon:'🎨',nm:'VIVID',css:'saturate(320%) contrast(115%)',special:null},
+  {id:'golden',icon:'🌅',nm:'GOLDEN',css:'sepia(55%) hue-rotate(-25deg) saturate(220%)',special:null},
+  {id:'neon',icon:'🔵',nm:'NEON',css:'hue-rotate(175deg) saturate(350%) brightness(125%)',special:null},
+  {id:'cyber',icon:'💜',nm:'CYBER',css:'hue-rotate(240deg) saturate(280%) brightness(115%)',special:null},
+  {id:'vaporwave',icon:'🌆',nm:'VAPOR',css:'hue-rotate(285deg) saturate(450%) brightness(110%)',special:null},
+  {id:'matrix',icon:'🟢',nm:'MATRIX',css:'hue-rotate(90deg) saturate(220%)',special:null},
+  {id:'infrared',icon:'🔴',nm:'INFRA',css:'invert(85%) hue-rotate(175deg) saturate(420%)',special:null},
+  {id:'fire',icon:'🔥',nm:'FIRE',css:'hue-rotate(-25deg) saturate(450%) contrast(128%)',special:null},
+  {id:'ice',icon:'🧊',nm:'ICE',css:'hue-rotate(185deg) saturate(170%) brightness(125%)',special:null},
+  {id:'dreamy',icon:'✨',nm:'DREAMY',css:'brightness(135%) contrast(75%) saturate(130%) blur(.5px)',special:null},
+  {id:'noir',icon:'🌑',nm:'NOIR',css:'contrast(210%) brightness(75%)',special:null},
+  {id:'film',icon:'🏛',nm:'FILM',css:'contrast(145%) saturate(55%) sepia(28%)',special:null},
+  {id:'acid',icon:'🧪',nm:'ACID',css:'hue-rotate(125deg) saturate(550%) contrast(160%)',special:null},
+  {id:'glitch',icon:'⚡',nm:'GLITCH',css:'none',special:'glitch'},
+  {id:'scanlines',icon:'📺',nm:'SCAN',css:'none',special:'scanlines'},
+  {id:'deepfry',icon:'🍳',nm:'DEEPFRY',css:'contrast(450%) saturate(550%) brightness(125%)',special:null},
+  {id:'sunset',icon:'🌄',nm:'SUNSET',css:'sepia(40%) hue-rotate(10deg) saturate(300%)',special:null},
 ];
 
-// Build filter chips
-const fxRow = document.getElementById('fxRow');
-FILTERS.forEach((f,i) => {
-  const div = document.createElement('div');
-  div.className = 'fx-chip' + (i===0?' on':'');
-  div.dataset.id = f.id;
-  div.innerHTML = `<div class="fx-thumb">${f.icon}</div><div class="fx-lbl">${f.nm}</div>`;
-  div.onclick = () => setFx(f.id);
+const fxRow=document.getElementById('fxRow');
+FILTERS.forEach((f,i)=>{
+  const div=document.createElement('div');
+  div.className='fx-chip'+(i===0?' on':'');
+  div.dataset.id=f.id;
+  div.innerHTML=`<div class="fx-thumb">${f.icon}</div><div class="fx-lbl">${f.nm}</div>`;
+  div.onclick=()=>setFx(f.id);
   fxRow.appendChild(div);
 });
 
-// ══════════════════════════════════════════════
+// ════════════════════════════════════
 // GLOBALS
-// ══════════════════════════════════════════════
-const video  = document.getElementById('videoEl');
-const poseCv = document.getElementById('poseCanvas');
-const poseCtx= poseCv.getContext('2d');
-const handCv = document.getElementById('handCanvas');
-const handCtx= handCv.getContext('2d');
-const swordCv= document.getElementById('swordCanvas');
-const swordCtx=swordCv.getContext('2d');
-const capCv  = document.getElementById('capCanvas');
-const capCtx = capCv.getContext('2d');
+// ════════════════════════════════════
+const video=document.getElementById('videoEl');
+const poseCv=document.getElementById('poseCanvas'),poseCtx=poseCv.getContext('2d');
+const handCv=document.getElementById('handCanvas'),handCtx=handCv.getContext('2d');
+const swordCv=document.getElementById('swordCanvas'),swordCtx=swordCv.getContext('2d');
+const customCv=document.getElementById('customCanvas'),customCtx=customCv.getContext('2d');
+const capCv=document.getElementById('capCanvas'),capCtx=capCv.getContext('2d');
 
-let stream=null, facingMode='user', currentFxId='none', adjF='', mirrored=false;
-let gridOn=false, timerOn=false;
+let stream=null,facingMode='user',currentFxId='none',adjF='',mirrored=false,timerOn=false;
 let T={per:800,rx:0,ry:0,rz:0,sc:1,skx:0};
-let leftPanelHidden=true, rightPanelHidden=true;
 let fxIdx=0;
 
 // AI
-let poseDetector=null, handDetector=null;
-let poses=[], hands=[];
-let poseMode=false, handMode=false, gestMode=false, fallMode=false;
-let showDots=false, showSkel=false, detectFrameOn=false;
-let poseRunning=false, handRunning=false;
-let fallActive=false, fallTid=null;
+let poseDetector=null,handDetector=null,poses=[],hands=[];
+let poseMode=false,handMode=false,gestMode=false,fallMode=false;
+let showDots=false,showSkel=false,detectFrameOn=false;
+let poseRunning=false,handRunning=false;
+let fallActive=false,fallTid=null;
 
 // Gesture
-let gestCommandCooldown=false;
-let prevGest='';
-let gestHist=[];
-let pinchActive=false, pinchBaseDist=0, pinchBaseScale=1;
-let prevHandX=0.5, prevHandY=0.5;
+let gestCommandCooldown=false,prevGest='',pinchActive=false,pinchBaseDist=0,pinchBaseScale=1;
 
-// ── SWORD SYSTEM ──
-let swordModeActive = false;
-let swordMode = 'fly';      // fly | summon | storm | shield
-let swordStyle = 'classic'; // classic | fire | ice | light
-let swordSpeed = 5;
-let swordSize = 1.0;
-let swordGlow = 0.7;
-let swordCount = 5;
-let swords = [];
-let particles = [];
-let handTrailPos = {x:0, y:0};
-let swordAnimFrame = 0;
-let stormAngle = 0;
-let shieldAngle = 0;
+// Sword
+let swordModeActive=false,swordMode='fly',swordStyle='classic';
+let swordSpeed=5,swordSize=1.0,swordGlow=0.7,swordCount=5;
+let swords=[],particles=[];
+let handTrailPos={x:0,y:0};
+let swordAnimFrame=0,stormAngle=0,shieldAngle=0;
+
+// Image mode
+let imgModeActive=false,imgEffect='float';
+let imgObjects=[],uploadedImages=[];
+let selectedImgIdx=-1;
+let imgSize=0.8,imgAlpha=0.9,imgSpeed=5;
+let imgAnimFrame=0;
+
+// Quicktoggle states
+let qtGlitchOn=false,qtScanOn=false;
 
 // Recording
-let recorder=null, recChunks=[], recStream=null, recCv=null, recCtx=null;
-let isRec=false, recStart=0, recIv=null;
+let recorder=null,recChunks=[],isRec=false,recStart=0,recIv=null;
 
 // Gallery
 let gallery=[];
 
 // FPS
-let fFrames=0, fLast=performance.now(), fps=0;
+let fFrames=0,fLast=performance.now(),fps=0;
 
-// Skeleton
-const CONN=[[0,1],[0,2],[1,3],[2,4],[5,6],[5,7],[7,9],[6,8],[8,10],
-            [5,11],[6,12],[11,12],[11,13],[13,15],[12,14],[14,16]];
-const KPN=['nose','left_eye','right_eye','left_ear','right_ear',
-           'left_shoulder','right_shoulder','left_elbow','right_elbow',
-           'left_wrist','right_wrist','left_hip','right_hip',
-           'left_knee','right_knee','left_ankle','right_ankle'];
-const HAND_CONN=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],
-                 [0,9],[9,10],[10,11],[11,12],[0,13],[13,14],[14,15],[15,16],
-                 [0,17],[17,18],[18,19],[19,20],[5,9],[9,13],[13,17]];
+// Skeleton connections
+const CONN=[[0,1],[0,2],[1,3],[2,4],[5,6],[5,7],[7,9],[6,8],[8,10],[5,11],[6,12],[11,12],[11,13],[13,15],[12,14],[14,16]];
+const KPN=['nose','left_eye','right_eye','left_ear','right_ear','left_shoulder','right_shoulder','left_elbow','right_elbow','left_wrist','right_wrist','left_hip','right_hip','left_knee','right_knee','left_ankle','right_ankle'];
+const HAND_CONN=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[0,9],[9,10],[10,11],[11,12],[0,13],[13,14],[14,15],[15,16],[0,17],[17,18],[18,19],[19,20],[5,9],[9,13],[13,17]];
 
-// ══════════════════════════════════════════════
+// ════════════════════════════════════
 // INIT
-// ══════════════════════════════════════════════
-window.onload = () => { startCam(); requestAnimationFrame(loop); };
+// ════════════════════════════════════
+window.onload=()=>{startCam();requestAnimationFrame(loop);};
 
-// ══════════════════════════════════════════════
+// ════════════════════════════════════
 // CAMERA
-// ══════════════════════════════════════════════
-const resMap={
-  '4k':{width:{ideal:3840},height:{ideal:2160}},
-  '1440p':{width:{ideal:2560},height:{ideal:1440}},
-  '1080p':{width:{ideal:1920},height:{ideal:1080}},
-  '720p':{width:{ideal:1280},height:{ideal:720}},
-};
+// ════════════════════════════════════
+const resMap={'4k':{width:{ideal:3840},height:{ideal:2160}},'1440p':{width:{ideal:2560},height:{ideal:1440}},'1080p':{width:{ideal:1920},height:{ideal:1080}},'720p':{width:{ideal:1280},height:{ideal:720}}};
 async function startCam(){
   const rk=document.getElementById('resSel').value;
   try{
-    if(stream) stream.getTracks().forEach(t=>t.stop());
+    if(stream)stream.getTracks().forEach(t=>t.stop());
     stream=await navigator.mediaDevices.getUserMedia({video:{...resMap[rk],facingMode},audio:false});
-    video.srcObject=stream;
-    mirrored=facingMode==='user';
-    updateMirrorUI();
-    applyFx();
+    video.srcObject=stream;mirrored=facingMode==='user';updateMirrorUI();applyFx();
     video.style.display='block';
     document.getElementById('noCam').classList.remove('on');
     document.getElementById('camDot').classList.add('g');
     document.getElementById('camSt').textContent='LIVE';
   }catch(e){
-    console.warn(e);
     document.getElementById('camSt').textContent='ERROR';
     document.getElementById('noCam').querySelector('.start-btn').textContent='THỬ LẠI';
   }
 }
-async function changeRes(){if(stream) await startCam();}
-async function switchCam(){facingMode=facingMode==='user'?'environment':'user'; await startCam();}
+async function changeRes(){if(stream)await startCam();}
+async function switchCam(){facingMode=facingMode==='user'?'environment':'user';await startCam();}
 
-// ══════════════════════════════════════════════
+// ════════════════════════════════════
 // MAIN LOOP
-// ══════════════════════════════════════════════
+// ════════════════════════════════════
 function loop(){
   fFrames++;
   const now=performance.now();
   if(now-fLast>=1000){fps=Math.round(fFrames*1000/(now-fLast));fLast=now;fFrames=0;updHUD();}
-
   const pr=swordCv.parentElement.getBoundingClientRect();
-  const W=pr.width, H=pr.height;
-  poseCv.width=handCv.width=swordCv.width=W;
-  poseCv.height=handCv.height=swordCv.height=H;
-
-  // Pose skeleton
-  if((showDots||showSkel)&&poses.length>0&&video.videoWidth>0)
-    drawPoseSkel(poseCtx,poses[0].keypoints,W,H,false);
+  const W=pr.width,H=pr.height;
+  poseCv.width=handCv.width=swordCv.width=customCv.width=W;
+  poseCv.height=handCv.height=swordCv.height=customCv.height=H;
+  if((showDots||showSkel)&&poses.length>0&&video.videoWidth>0)drawPoseSkel(poseCtx,poses[0].keypoints,W,H,false);
   else poseCtx.clearRect(0,0,W,H);
-
-  // Hand skeleton
-  if(handMode&&hands.length>0&&video.videoWidth>0)
-    drawHands(handCtx,hands,W,H);
+  if(handMode&&hands.length>0&&video.videoWidth>0)drawHands(handCtx,hands,W,H);
   else handCtx.clearRect(0,0,W,H);
-
-  // Sword canvas
-  if(swordModeActive) drawSword(swordCtx,W,H);
+  if(swordModeActive)drawSword(swordCtx,W,H);
   else swordCtx.clearRect(0,0,W,H);
-
-  swordAnimFrame++;
+  if(imgModeActive)drawImgMode(customCtx,W,H);
+  else customCtx.clearRect(0,0,W,H);
+  swordAnimFrame++;imgAnimFrame++;
   requestAnimationFrame(loop);
 }
-
 function updHUD(){
   if(!stream)return;
-  const tr=stream.getVideoTracks()[0]; if(!tr)return;
+  const tr=stream.getVideoTracks()[0];if(!tr)return;
   const s=tr.getSettings();
-  const w=s.width||0, h=s.height||0;
-  document.getElementById('resSt').textContent=`${w}×${h}`;
+  document.getElementById('resSt').textContent=`${s.width||0}×${s.height||0}`;
   document.getElementById('fpsSt').textContent=fps+'fps';
 }
 
-// ══════════════════════════════════════════════
+// ════════════════════════════════════
 // FILTER
-// ══════════════════════════════════════════════
+// ════════════════════════════════════
 function setFx(id){
-  currentFxId=id;
-  fxIdx=FILTERS.findIndex(f=>f.id===id);
+  currentFxId=id;fxIdx=FILTERS.findIndex(f=>f.id===id);
   document.querySelectorAll('.fx-chip').forEach(b=>b.classList.toggle('on',b.dataset.id===id));
   const f=FILTERS.find(x=>x.id===id);
-  document.getElementById('glitchOv').classList.toggle('on',f?.special==='glitch');
-  document.getElementById('scanOv').classList.toggle('on',f?.special==='scanlines');
+  if(!qtGlitchOn)document.getElementById('glitchOv').classList.toggle('on',f?.special==='glitch');
+  if(!qtScanOn)document.getElementById('scanOv').classList.toggle('on',f?.special==='scanlines');
   applyFx();
 }
 function updAdj(){
-  const b=+document.getElementById('sBri').value;
-  const c=+document.getElementById('sCon').value;
-  const s=+document.getElementById('sSat').value;
-  const bl=+document.getElementById('sBlr').value;
-  const h=+document.getElementById('sHue').value;
-  const sp=+document.getElementById('sSepia').value;
-  document.getElementById('vBri').textContent=b+'%';
-  document.getElementById('vCon').textContent=c+'%';
-  document.getElementById('vSat').textContent=s+'%';
-  document.getElementById('vBlr').textContent=bl+'px';
-  document.getElementById('vHue').textContent=h+'°';
-  document.getElementById('vSepia').textContent=sp+'%';
+  const b=+document.getElementById('sBri').value,c=+document.getElementById('sCon').value;
+  const s=+document.getElementById('sSat').value,bl=+document.getElementById('sBlr').value;
+  const h=+document.getElementById('sHue').value,sp=+document.getElementById('sSepia').value;
+  document.getElementById('vBri').textContent=b+'%';document.getElementById('vCon').textContent=c+'%';
+  document.getElementById('vSat').textContent=s+'%';document.getElementById('vBlr').textContent=bl+'px';
+  document.getElementById('vHue').textContent=h+'°';document.getElementById('vSepia').textContent=sp+'%';
   adjF=`brightness(${b}%) contrast(${c}%) saturate(${s}%) blur(${bl}px) hue-rotate(${h}deg) sepia(${sp}%)`;
   applyFx();
 }
@@ -977,630 +855,444 @@ function applyFx(){
   video.style.transform=`perspective(${T.per}px) rotateX(${T.rx}deg) rotateY(${T.ry}deg) rotateZ(${T.rz}deg) scale(${T.sc}) skewX(${T.skx}deg)${mx}`;
 }
 function upd3D(){
-  T.per=+document.getElementById('sPer').value;
-  T.rx=+document.getElementById('sRx').value;
-  T.ry=+document.getElementById('sRy').value;
-  T.rz=+document.getElementById('sRz').value;
-  T.sc=+document.getElementById('sSc').value/100;
-  T.skx=+document.getElementById('sSkx').value;
-  document.getElementById('vPer').textContent=T.per+'px';
-  document.getElementById('vRx').textContent=T.rx+'°';
-  document.getElementById('vRy').textContent=T.ry+'°';
-  document.getElementById('vRz').textContent=T.rz+'°';
-  document.getElementById('vSc').textContent=T.sc.toFixed(1)+'×';
-  document.getElementById('vSkx').textContent=T.skx+'°';
+  T.per=+document.getElementById('sPer').value;T.rx=+document.getElementById('sRx').value;
+  T.ry=+document.getElementById('sRy').value;T.rz=+document.getElementById('sRz').value;
+  T.sc=+document.getElementById('sSc').value/100;T.skx=+document.getElementById('sSkx').value;
+  document.getElementById('vPer').textContent=T.per+'px';document.getElementById('vRx').textContent=T.rx+'°';
+  document.getElementById('vRy').textContent=T.ry+'°';document.getElementById('vRz').textContent=T.rz+'°';
+  document.getElementById('vSc').textContent=T.sc.toFixed(1)+'×';document.getElementById('vSkx').textContent=T.skx+'°';
   applyFx();
 }
-const p3dPresets={
-  tilt:{per:600,rx:18,ry:0,rz:0,sc:1,skx:0},
-  dutch:{per:800,rx:0,ry:0,rz:18,sc:1,skx:0},
-  fisheye:{per:280,rx:0,ry:0,rz:0,sc:1.3,skx:0},
-  warp:{per:400,rx:15,ry:20,rz:5,sc:1.1,skx:5},
-  side:{per:600,rx:0,ry:35,rz:0,sc:1.1,skx:0},
-  flat:{per:800,rx:0,ry:0,rz:0,sc:1,skx:0},
-};
-function p3d(name){
-  const p=p3dPresets[name]; if(!p)return;
-  Object.assign(T,p);
-  ['Per','Rx','Ry','Rz','Sc','Skx'].forEach(k=>{
-    const el=document.getElementById('s'+k);
-    if(el) el.value = k==='Sc'?Math.round(T[k.toLowerCase()]*100):T[k.toLowerCase()];
-  });
-  upd3D();
+const p3dPresets={tilt:{per:600,rx:18,ry:0,rz:0,sc:1,skx:0},dutch:{per:800,rx:0,ry:0,rz:18,sc:1,skx:0},fisheye:{per:280,rx:0,ry:0,rz:0,sc:1.3,skx:0},warp:{per:400,rx:15,ry:20,rz:5,sc:1.1,skx:5},side:{per:600,rx:0,ry:35,rz:0,sc:1.1,skx:0},flat:{per:800,rx:0,ry:0,rz:0,sc:1,skx:0}};
+function p3d(name){const p=p3dPresets[name];if(!p)return;Object.assign(T,p);['Per','Rx','Ry','Rz','Sc','Skx'].forEach(k=>{const el=document.getElementById('s'+k);if(el)el.value=k==='Sc'?Math.round(T[k.toLowerCase()]*100):T[k.toLowerCase()];});upd3D();}
+
+// Quick toggles
+function qtTogGlitch(){qtGlitchOn=!qtGlitchOn;document.getElementById('qtGlitch').classList.toggle('on-pk',qtGlitchOn);document.getElementById('glitchOv').classList.toggle('on',qtGlitchOn);}
+function qtTogScan(){qtScanOn=!qtScanOn;document.getElementById('qtScan').classList.toggle('on',qtScanOn);document.getElementById('scanOv').classList.toggle('on',qtScanOn);}
+
+// ════════════════════════════════════
+// IMAGE MODE
+// ════════════════════════════════════
+class ImgObject{
+  constructor(img,idx){
+    this.img=img;this.idx=idx;
+    this.x=Math.random();this.y=Math.random()*.6+.1;
+    this.vx=(Math.random()-.5)*.003;this.vy=(Math.random()-.5)*.002;
+    this.phase=Math.random()*Math.PI*2;
+    this.angle=0;this.angularV=0;
+    this.scale=1;this.life=1;
+    this.orbitAngle=Math.random()*Math.PI*2;
+    this.orbitSpeed=(Math.random()*.01+.005)*(Math.random()<.5?1:-1);
+    this.orbitR=0.1+Math.random()*.15;
+    this.cx=.3+Math.random()*.4;this.cy=.3+Math.random()*.4;
+    this.shootAngle=Math.random()*Math.PI*2;
+    this.shootSpeed=(Math.random()*.006+.004);
+    this.spiralR=0.05+Math.random()*.08;
+    this.spiralAngle=Math.random()*Math.PI*2;
+    this.spiralExpand=0;
+  }
+  update(W,H){
+    switch(imgEffect){
+      case 'float':
+        this.x+=this.vx*(imgSpeed/5);
+        this.y+=this.vy*(imgSpeed/5)+Math.sin(imgAnimFrame*.025+this.phase)*.0008;
+        if(this.x<-.2||this.x>1.2)this.vx*=-1;
+        if(this.y<-.1||this.y>1.1)this.vy*=-1;
+        if(document.getElementById('tgImgRotate').classList.contains('on'))this.angle+=0.006*(imgSpeed/5);
+        break;
+      case 'orbit':
+        this.orbitAngle+=this.orbitSpeed*(imgSpeed/5);
+        this.x=this.cx+Math.cos(this.orbitAngle)*this.orbitR;
+        this.y=this.cy+Math.sin(this.orbitAngle)*this.orbitR*.6;
+        this.angle=this.orbitAngle+Math.PI/2;
+        break;
+      case 'shoot':
+        this.x+=Math.cos(this.shootAngle)*this.shootSpeed*(imgSpeed/5);
+        this.y+=Math.sin(this.shootAngle)*this.shootSpeed*(imgSpeed/5);
+        if(this.x<-.2)this.x=1.2;if(this.x>1.2)this.x=-.2;
+        if(this.y<-.2)this.y=1.2;if(this.y>1.2)this.y=-.2;
+        this.angle=this.shootAngle;
+        break;
+      case 'spiral':
+        this.spiralAngle+=.02*(imgSpeed/5);
+        this.spiralExpand=Math.sin(imgAnimFrame*.01+this.phase)*.06;
+        this.x=.5+Math.cos(this.spiralAngle)*(this.spiralR+this.spiralExpand);
+        this.y=.45+Math.sin(this.spiralAngle)*(this.spiralR+this.spiralExpand)*.65;
+        this.angle=this.spiralAngle+Math.PI/2;
+        break;
+    }
+  }
+  draw(ctx,W,H){
+    const px=this.x*W,py=this.y*H;
+    const baseW=Math.min(W,H)*imgSize*.4;
+    const ar=this.img.naturalWidth/this.img.naturalHeight;
+    const iw=baseW,ih=baseW/ar;
+    const glowOn=document.getElementById('tgImgGlow').classList.contains('on');
+    ctx.save();
+    ctx.globalAlpha=imgAlpha;
+    ctx.translate(px,py);ctx.rotate(this.angle);
+    if(glowOn){
+      ctx.shadowColor=`hsla(${(imgAnimFrame*2+this.idx*60)%360},90%,70%,1)`;
+      ctx.shadowBlur=22+Math.sin(imgAnimFrame*.05+this.phase)*8;
+    }
+    ctx.drawImage(this.img,-iw/2,-ih/2,iw,ih);
+    ctx.restore();
+    // Particle trail
+    if(glowOn&&Math.random()<.25){
+      const hue=(imgAnimFrame*3+this.idx*60)%360;
+      ctx.save();ctx.globalAlpha=.5*Math.random();
+      ctx.beginPath();ctx.arc(px+(Math.random()-.5)*iw*.5,py+(Math.random()-.5)*ih*.5,2+Math.random()*3,0,Math.PI*2);
+      ctx.fillStyle=`hsl(${hue},100%,75%)`;ctx.fill();ctx.restore();
+    }
+  }
 }
 
-// ══════════════════════════════════════════════
-// ██████  KIẾM TIÊN SYSTEM  ██████
-// ══════════════════════════════════════════════
+// Launch image object (gesture)
+function launchImgObjects(){
+  if(!imgModeActive||imgObjects.length===0)return;
+  // Shoot all from hand position
+  const W=customCv.width,H=customCv.height;
+  const hx=handTrailPos.x/W,hy=handTrailPos.y/H;
+  imgObjects.forEach(obj=>{
+    obj.x=hx;obj.y=hy;
+    obj.shootAngle=Math.atan2(obj.y-.5,obj.x-.5)+Math.PI+(Math.random()-.5)*.8;
+    obj.shootSpeed=(Math.random()*.008+.006)*(imgSpeed/5);
+  });
+  setImgEffect('shoot');
+  fireGesture('🖼️ PHI ẢNH','Ảnh thần tung bay!',null,'img');
+}
 
-// Sword color palettes by style
-const SWORD_PALETTES = {
-  classic: { blade:'#e8f0ff', edge:'#ffffff', glow:'#5599ff', trail:'rgba(100,160,255,', bg:'rgba(80,130,255,' },
-  fire:    { blade:'#ffcc44', edge:'#ffffff', glow:'#ff6600', trail:'rgba(255,120,30,',  bg:'rgba(255,80,0,' },
-  ice:     { blade:'#aaeeff', edge:'#ffffff', glow:'#00ddff', trail:'rgba(0,210,255,',   bg:'rgba(0,180,240,' },
-  light:   { blade:'#ffffaa', edge:'#ffffff', glow:'#ffee00', trail:'rgba(255,230,50,',  bg:'rgba(255,200,0,' },
+function drawImgMode(ctx,W,H){
+  ctx.clearRect(0,0,W,H);
+  imgObjects.forEach(obj=>{obj.update(W,H);obj.draw(ctx,W,H);});
+}
+
+function togImgMode(){
+  imgModeActive=!imgModeActive;
+  document.getElementById('tgImgMain').classList.toggle('on',imgModeActive);
+  document.getElementById('sbImg').classList.toggle('active-pu',imgModeActive);
+  document.getElementById('qtImg').classList.toggle('on-pu',imgModeActive);
+  document.getElementById('imgStatusBar').style.display=imgModeActive?'flex':'none';
+  const sr=document.getElementById('shutterRing');
+  const si=document.getElementById('shutterInner');
+  const ico=document.getElementById('shutterIco');
+  if(imgModeActive&&!swordModeActive){
+    sr.classList.add('img-mode');si.classList.add('img-on');ico.textContent='🖼️';
+    if(!handMode)togHand();
+    if(imgObjects.length===0&&uploadedImages.length>0)spawnImgObjects();
+  } else if(!swordModeActive){
+    sr.classList.remove('img-mode');si.classList.remove('img-on');ico.textContent='📸';
+  }
+}
+
+function setImgEffect(e){
+  imgEffect=e;
+  ['Float','Orbit','Shoot','Spiral'].forEach(k=>{
+    document.getElementById('ie'+k)?.classList.toggle('on',k.toLowerCase()===e);
+  });
+  imgObjects.forEach(obj=>{
+    obj.cx=.3+Math.random()*.4;obj.cy=.3+Math.random()*.4;
+    obj.orbitAngle=Math.random()*Math.PI*2;
+  });
+}
+
+function updImg(){
+  imgSize=+document.getElementById('sImgSize').value/100;
+  imgAlpha=+document.getElementById('sImgAlpha').value/100;
+  imgSpeed=+document.getElementById('sImgSpeed').value;
+  document.getElementById('vImgSize').textContent=Math.round(imgSize*100)+'%';
+  document.getElementById('vImgAlpha').textContent=Math.round(imgAlpha*100)+'%';
+  document.getElementById('vImgSpeed').textContent=imgSpeed;
+}
+
+function handleImgFiles(files){
+  Array.from(files).forEach(f=>{
+    const url=URL.createObjectURL(f);
+    const img=new Image();
+    img.onload=()=>{
+      uploadedImages.push({url,img});
+      renderImgThumbs();
+      if(uploadedImages.length===1)selectedImgIdx=0;
+      if(imgModeActive)spawnImgObjects();
+    };
+    img.src=url;
+  });
+}
+function handleImgDrop(e){e.preventDefault();handleImgFiles(e.dataTransfer.files);}
+function renderImgThumbs(){
+  const c=document.getElementById('imgThumbs');c.innerHTML='';
+  uploadedImages.forEach((u,i)=>{
+    const d=document.createElement('div');d.className='img-thumb'+(i===selectedImgIdx?' selected':'');
+    d.innerHTML=`<img src="${u.url}"><button class="th-del" onclick="delImg(${i},event)">×</button>`;
+    d.onclick=()=>{selectedImgIdx=i;renderImgThumbs();if(imgModeActive)spawnImgObjects();};
+    c.appendChild(d);
+  });
+}
+function delImg(i,e){e.stopPropagation();uploadedImages.splice(i,1);if(selectedImgIdx>=uploadedImages.length)selectedImgIdx=uploadedImages.length-1;renderImgThumbs();spawnImgObjects();}
+function spawnImgObjects(){
+  imgObjects=[];
+  if(uploadedImages.length===0)return;
+  const toSpawn=selectedImgIdx>=0?[uploadedImages[selectedImgIdx]]:(uploadedImages.length>3?uploadedImages.slice(0,3):uploadedImages);
+  toSpawn.forEach((u,i)=>imgObjects.push(new ImgObject(u.img,i)));
+}
+
+// ════════════════════════════════════
+// SWORD PALETTES
+// ════════════════════════════════════
+const SWORD_PALETTES={
+  classic:{blade:'#dde8ff',edge:'#ffffff',glow:'#4488ff',trail:'rgba(80,140,255,',bg:'rgba(60,110,255,'},
+  fire:{blade:'#ffcc44',edge:'#ffffff',glow:'#ff6600',trail:'rgba(255,110,20,',bg:'rgba(255,70,0,'},
+  ice:{blade:'#aaeeff',edge:'#ffffff',glow:'#00ddff',trail:'rgba(0,200,255,',bg:'rgba(0,170,240,'},
+  light:{blade:'#ffffaa',edge:'#ffffff',glow:'#ffee00',trail:'rgba(255,230,40,',bg:'rgba(255,190,0,'},
 };
 
-// Particle class
-class SwordParticle {
-  constructor(x, y, pal, type='spark'){
-    this.x=x; this.y=y;
-    this.vx=(Math.random()-0.5)*6; this.vy=(Math.random()-0.5)*6 - 1;
-    this.life=1; this.decay=0.02+Math.random()*0.04;
-    this.r=2+Math.random()*4; this.pal=pal; this.type=type;
-    this.angle=Math.random()*Math.PI*2;
-    this.spin=(Math.random()-0.5)*0.3;
+class SwordParticle{
+  constructor(x,y,pal,type='spark'){
+    this.x=x;this.y=y;this.vx=(Math.random()-.5)*6;this.vy=(Math.random()-.5)*6-1;
+    this.life=1;this.decay=.022+Math.random()*.04;this.r=2+Math.random()*4;
+    this.pal=pal;this.type=type;this.angle=Math.random()*Math.PI*2;this.spin=(Math.random()-.5)*.3;
   }
-  update(){
-    this.x+=this.vx; this.y+=this.vy;
-    this.vy+=0.1; this.vx*=0.96;
-    this.life-=this.decay;
-    this.r*=0.97;
-    this.angle+=this.spin;
-  }
+  update(){this.x+=this.vx;this.y+=this.vy;this.vy+=.1;this.vx*=.96;this.life-=this.decay;this.r*=.97;this.angle+=this.spin;}
   draw(ctx){
-    if(this.life<=0)return;
-    ctx.save();
-    ctx.globalAlpha=this.life*swordGlow;
+    if(this.life<=0)return;ctx.save();ctx.globalAlpha=this.life*swordGlow;
     if(this.type==='star'){
-      ctx.translate(this.x,this.y);ctx.rotate(this.angle);
-      ctx.beginPath();
-      for(let i=0;i<5;i++){
-        const a=i*Math.PI*2/5-Math.PI/2;
-        const ia=a+Math.PI/5;
-        ctx.lineTo(Math.cos(a)*this.r*2,Math.sin(a)*this.r*2);
-        ctx.lineTo(Math.cos(ia)*this.r*.8,Math.sin(ia)*this.r*.8);
-      }
-      ctx.closePath();
-      ctx.fillStyle=this.pal.edge;
-      ctx.fill();
-    } else {
-      ctx.beginPath(); ctx.arc(this.x,this.y,this.r,0,Math.PI*2);
-      ctx.fillStyle=this.pal.trail+this.life+')';
-      ctx.fill();
-    }
+      ctx.translate(this.x,this.y);ctx.rotate(this.angle);ctx.beginPath();
+      for(let i=0;i<5;i++){const a=i*Math.PI*2/5-Math.PI/2,ia=a+Math.PI/5;ctx.lineTo(Math.cos(a)*this.r*2,Math.sin(a)*this.r*2);ctx.lineTo(Math.cos(ia)*this.r*.8,Math.sin(ia)*this.r*.8);}
+      ctx.closePath();ctx.fillStyle=this.pal.edge;ctx.fill();
+    }else{ctx.beginPath();ctx.arc(this.x,this.y,this.r,0,Math.PI*2);ctx.fillStyle=this.pal.trail+this.life+')';ctx.fill();}
     ctx.restore();
   }
 }
 
-// Sword object
-class Sword {
+class Sword{
   constructor(x,y,angle,type='main'){
-    this.x=x; this.y=y;
-    this.tx=x; this.ty=y; // target
-    this.angle=angle;
-    this.targetAngle=angle;
-    this.type=type;
-    this.speed=swordSpeed*2;
-    this.life=1;
-    this.length=120*swordSize;
-    this.w=7*swordSize;
-    this.trail=[];
-    this.phase=Math.random()*Math.PI*2;
-    this.orbitR=0; this.orbitAngle=0; this.orbitSpeed=0.03;
-    this.launched=false;
-    this.launchVx=0; this.launchVy=0;
-    this.spinning=false;
-    this.glowPulse=0;
+    this.x=x;this.y=y;this.tx=x;this.ty=y;this.angle=angle;this.targetAngle=angle;
+    this.type=type;this.speed=swordSpeed*2;this.life=1;this.length=120*swordSize;
+    this.w=7*swordSize;this.trail=[];this.phase=Math.random()*Math.PI*2;
+    this.launched=false;this.launchVx=0;this.launchVy=0;
+    this.spinning=false;this.glowPulse=0;
   }
   update(W,H){
-    if(this.spinning){
-      this.angle+=0.25;
-    } else if(this.launched){
-      this.x+=this.launchVx; this.y+=this.launchVy;
+    if(this.spinning){this.angle+=.25;}
+    else if(this.launched){
+      this.x+=this.launchVx;this.y+=this.launchVy;
       this.angle=Math.atan2(this.launchVy,this.launchVx);
-      // Boundary bounce or remove
-      if(this.x<-200||this.x>W+200||this.y<-200||this.y>H+200) this.life=0;
-    } else {
-      // Smooth follow
-      const dx=this.tx-this.x, dy=this.ty-this.y;
-      const spd=Math.min(this.speed, Math.hypot(dx,dy));
-      if(Math.hypot(dx,dy)>2){
-        this.x+=dx*.12*this.speed*.3;
-        this.y+=dy*.12*this.speed*.3;
-        this.targetAngle=Math.atan2(dy,dx)+Math.PI/2;
-      }
+      if(this.x<-200||this.x>W+200||this.y<-200||this.y>H+200)this.life=0;
+    }else{
+      const dx=this.tx-this.x,dy=this.ty-this.y;
+      if(Math.hypot(dx,dy)>2){this.x+=dx*.12*this.speed*.3;this.y+=dy*.12*this.speed*.3;this.targetAngle=Math.atan2(dy,dx)+Math.PI/2;}
       this.angle+=(this.targetAngle-this.angle)*.18;
     }
-    // Trail
     this.trail.push({x:this.x,y:this.y,a:this.angle});
-    if(this.trail.length>22) this.trail.shift();
+    if(this.trail.length>22)this.trail.shift();
     this.glowPulse=(Math.sin(swordAnimFrame*.08+this.phase)+1)*.5;
-    // Spawn particles
-    if(document.getElementById('tgParticles').classList.contains('on') && Math.random()<0.3){
+    if(document.getElementById('tgParticles').classList.contains('on')&&Math.random()<.28){
       const pal=SWORD_PALETTES[swordStyle];
       const off=this.length*.3;
       const px=this.x+Math.sin(this.angle)*off+(Math.random()-.5)*8;
       const py=this.y-Math.cos(this.angle)*off+(Math.random()-.5)*8;
-      particles.push(new SwordParticle(px,py,pal, Math.random()<.15?'star':'spark'));
+      particles.push(new SwordParticle(px,py,pal,Math.random()<.15?'star':'spark'));
     }
   }
   draw(ctx){
     if(this.life<=0)return;
     const pal=SWORD_PALETTES[swordStyle];
-    ctx.save();
-    ctx.translate(this.x,this.y);
-    ctx.rotate(this.angle);
-
-    const L=this.length, hw=this.w/2;
-    const alpha=this.life*0.95;
-
-    // Draw trail
+    ctx.save();ctx.translate(this.x,this.y);ctx.rotate(this.angle);
+    const L=this.length,hw=this.w/2,alpha=this.life*.95;
     if(document.getElementById('tgTrail').classList.contains('on')){
       this.trail.forEach((p,i)=>{
-        if(i<2)return;
-        const t=i/this.trail.length;
-        ctx.save();
-        ctx.globalAlpha=t*0.35*alpha*swordGlow;
-        ctx.translate(p.x-this.x,p.y-this.y);
-        ctx.rotate(p.a-this.angle);
-        const tw=hw*(t*.7+.3);
-        ctx.beginPath();
-        ctx.moveTo(-tw,-L*.4);ctx.lineTo(tw,-L*.4);ctx.lineTo(0,-L*.8);ctx.closePath();
-        ctx.fillStyle=pal.trail+'1)';
-        ctx.fill();
-        ctx.restore();
+        if(i<2)return;const t=i/this.trail.length;ctx.save();ctx.globalAlpha=t*.32*alpha*swordGlow;
+        ctx.translate(p.x-this.x,p.y-this.y);ctx.rotate(p.a-this.angle);
+        const tw=hw*(t*.7+.3);ctx.beginPath();ctx.moveTo(-tw,-L*.4);ctx.lineTo(tw,-L*.4);ctx.lineTo(0,-L*.8);ctx.closePath();
+        ctx.fillStyle=pal.trail+'1)';ctx.fill();ctx.restore();
       });
     }
-
-    // Outer glow
-    const glowAmt=(0.5+this.glowPulse*.5)*swordGlow;
-    ctx.shadowColor=pal.glow;
-    ctx.shadowBlur=25*glowAmt;
-    ctx.globalAlpha=alpha;
-
-    // Blade body
+    const glowAmt=(.5+this.glowPulse*.5)*swordGlow;
+    ctx.shadowColor=pal.glow;ctx.shadowBlur=26*glowAmt;ctx.globalAlpha=alpha;
     const bladeGrad=ctx.createLinearGradient(0,-L*.5,0,L*.35);
-    bladeGrad.addColorStop(0,'rgba(255,255,255,0.1)');
-    bladeGrad.addColorStop(0.15,pal.blade);
-    bladeGrad.addColorStop(0.6,pal.blade);
-    bladeGrad.addColorStop(1,'rgba(80,80,100,0.8)');
-    ctx.beginPath();
-    ctx.moveTo(0,-L*.55); // tip
-    ctx.lineTo(hw*.6,-L*.2);
-    ctx.lineTo(hw,L*.15);
-    ctx.lineTo(hw*.5,L*.35);
-    ctx.lineTo(0,L*.4);
-    ctx.lineTo(-hw*.5,L*.35);
-    ctx.lineTo(-hw,L*.15);
-    ctx.lineTo(-hw*.6,-L*.2);
-    ctx.closePath();
-    ctx.fillStyle=bladeGrad;
-    ctx.fill();
-
-    // Edge highlight
-    ctx.shadowBlur=8;
-    ctx.shadowColor=pal.edge;
-    ctx.beginPath();
-    ctx.moveTo(0,-L*.55);ctx.lineTo(0,-L*.15);
-    ctx.strokeStyle='rgba(255,255,255,0.85)';ctx.lineWidth=1.2;ctx.stroke();
-
-    // Guard (crossguard)
-    const guardW=hw*3.5, guardH=hw*.9;
-    const guardGrad=ctx.createLinearGradient(-guardW,L*.1,guardW,L*.1);
-    guardGrad.addColorStop(0,pal.bg+'0.4)');
-    guardGrad.addColorStop(0.5,pal.blade);
-    guardGrad.addColorStop(1,pal.bg+'0.4)');
-    ctx.shadowBlur=12;ctx.shadowColor=pal.glow;
-    ctx.beginPath();
-    ctx.roundRect(-guardW,L*.1,guardW*2,guardH,guardH/2);
-    ctx.fillStyle=guardGrad;ctx.fill();
-
-    // Grip
-    for(let i=0;i<3;i++){
-      const gy=L*.25+i*(L*.07);
-      ctx.beginPath();
-      ctx.roundRect(-hw*.6,gy,hw*1.2,hw*.7,hw*.3);
-      const gGrad=ctx.createLinearGradient(-hw*.6,gy,hw*.6,gy);
-      gGrad.addColorStop(0,'rgba(80,60,40,.7)');
-      gGrad.addColorStop(.5,'rgba(140,110,70,.9)');
-      gGrad.addColorStop(1,'rgba(80,60,40,.7)');
-      ctx.fillStyle=gGrad;ctx.shadowBlur=2;ctx.fill();
-    }
-
-    // Pommel
-    ctx.shadowBlur=10;ctx.shadowColor=pal.glow;
-    ctx.beginPath();
-    ctx.ellipse(0,L*.42,hw*1.1,hw*.8,0,0,Math.PI*2);
-    const pomGrad=ctx.createRadialGradient(-hw*.3,L*.38,0,0,L*.42,hw*1.1);
-    pomGrad.addColorStop(0,'rgba(255,255,255,.7)');
-    pomGrad.addColorStop(.5,pal.blade);
-    pomGrad.addColorStop(1,pal.bg+'0.8)');
-    ctx.fillStyle=pomGrad;ctx.fill();
-
-    // Center gem glow
-    ctx.shadowBlur=20*glowAmt;ctx.shadowColor=pal.glow;
-    ctx.beginPath();
-    ctx.arc(0,L*.12,hw*.55,0,Math.PI*2);
-    const gemGrad=ctx.createRadialGradient(-hw*.2,L*.08,0,0,L*.12,hw*.55);
-    gemGrad.addColorStop(0,'rgba(255,255,255,.9)');
-    gemGrad.addColorStop(.4,pal.glow);
-    gemGrad.addColorStop(1,'rgba(0,0,0,.3)');
-    ctx.fillStyle=gemGrad;ctx.fill();
-
+    bladeGrad.addColorStop(0,'rgba(255,255,255,0.1)');bladeGrad.addColorStop(.15,pal.blade);bladeGrad.addColorStop(.6,pal.blade);bladeGrad.addColorStop(1,'rgba(80,80,100,0.8)');
+    ctx.beginPath();ctx.moveTo(0,-L*.55);ctx.lineTo(hw*.6,-L*.2);ctx.lineTo(hw,L*.15);ctx.lineTo(hw*.5,L*.35);ctx.lineTo(0,L*.4);ctx.lineTo(-hw*.5,L*.35);ctx.lineTo(-hw,L*.15);ctx.lineTo(-hw*.6,-L*.2);ctx.closePath();ctx.fillStyle=bladeGrad;ctx.fill();
+    ctx.shadowBlur=9;ctx.shadowColor=pal.edge;ctx.beginPath();ctx.moveTo(0,-L*.55);ctx.lineTo(0,-L*.15);ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=1.3;ctx.stroke();
+    const gW=hw*3.5,gH=hw*.9;const gGrad=ctx.createLinearGradient(-gW,L*.1,gW,L*.1);gGrad.addColorStop(0,pal.bg+'0.4)');gGrad.addColorStop(.5,pal.blade);gGrad.addColorStop(1,pal.bg+'0.4)');
+    ctx.shadowBlur=13;ctx.shadowColor=pal.glow;ctx.beginPath();ctx.roundRect(-gW,L*.1,gW*2,gH,gH/2);ctx.fillStyle=gGrad;ctx.fill();
+    for(let i=0;i<3;i++){const gy=L*.25+i*(L*.07);const rg=ctx.createLinearGradient(-hw*.6,gy,hw*.6,gy);rg.addColorStop(0,'rgba(80,60,40,.7)');rg.addColorStop(.5,'rgba(140,110,70,.9)');rg.addColorStop(1,'rgba(80,60,40,.7)');ctx.beginPath();ctx.roundRect(-hw*.6,gy,hw*1.2,hw*.7,hw*.3);ctx.fillStyle=rg;ctx.shadowBlur=2;ctx.fill();}
+    ctx.shadowBlur=11;ctx.shadowColor=pal.glow;ctx.beginPath();ctx.ellipse(0,L*.42,hw*1.1,hw*.8,0,0,Math.PI*2);
+    const pomGrad=ctx.createRadialGradient(-hw*.3,L*.38,0,0,L*.42,hw*1.1);pomGrad.addColorStop(0,'rgba(255,255,255,.7)');pomGrad.addColorStop(.5,pal.blade);pomGrad.addColorStop(1,pal.bg+'0.8)');ctx.fillStyle=pomGrad;ctx.fill();
+    ctx.shadowBlur=20*glowAmt;ctx.shadowColor=pal.glow;ctx.beginPath();ctx.arc(0,L*.12,hw*.55,0,Math.PI*2);
+    const gemGrad=ctx.createRadialGradient(-hw*.2,L*.08,0,0,L*.12,hw*.55);gemGrad.addColorStop(0,'rgba(255,255,255,.9)');gemGrad.addColorStop(.4,pal.glow);gemGrad.addColorStop(1,'rgba(0,0,0,.3)');ctx.fillStyle=gemGrad;ctx.fill();
     ctx.restore();
   }
 }
 
-// ══ SWORD DRAWING ENGINE ══
 function drawSword(ctx,W,H){
   ctx.clearRect(0,0,W,H);
-
-  // Update & draw particles
   particles=particles.filter(p=>{p.update();p.draw(ctx);return p.life>0;});
-
-  // Mode logic
-  switch(swordMode){
-    case 'fly':     drawFlyMode(ctx,W,H); break;
-    case 'summon':  drawSummonMode(ctx,W,H); break;
-    case 'storm':   drawStormMode(ctx,W,H); break;
-    case 'shield':  drawShieldMode(ctx,W,H); break;
-  }
-
-  // Update & draw swords
-  swords.forEach(s=>s.update(W,H));
-  swords=swords.filter(s=>s.life>0);
-  swords.forEach(s=>s.draw(ctx));
+  switch(swordMode){case'fly':drawFlyMode(ctx,W,H);break;case'summon':drawSummonMode(ctx,W,H);break;case'storm':drawStormMode(ctx,W,H);break;case'shield':drawShieldMode(ctx,W,H);break;}
+  swords.forEach(s=>s.update(W,H));swords=swords.filter(s=>s.life>0);swords.forEach(s=>s.draw(ctx));
 }
 
 function drawFlyMode(ctx,W,H){
-  // Main sword follows hand
-  if(swords.length===0){
-    const s=new Sword(W*.5,H*.4,-Math.PI*.1,'main');
-    swords.push(s);
-  }
-  const s=swords[0];
-  if(!s.launched){
-    const hx=handTrailPos.x||W*.5;
-    const hy=handTrailPos.y||H*.4;
-    s.tx=hx; s.ty=hy;
-  }
-  // Floating aura ring
-  const cx=swords[0]?.x||W*.5, cy=swords[0]?.y||H*.5;
-  const pal=SWORD_PALETTES[swordStyle];
-  const r=30+Math.sin(swordAnimFrame*.05)*8;
-  ctx.save();
-  ctx.globalAlpha=0.25*swordGlow;
-  ctx.strokeStyle=pal.glow;
-  ctx.lineWidth=1.5;
-  ctx.setLineDash([5,10]);
-  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.restore();
+  if(swords.filter(s=>!s.launched).length===0){const s=new Sword(W*.5,H*.4,-Math.PI*.1,'main');swords.push(s);}
+  swords.filter(s=>!s.launched).forEach(s=>{s.tx=handTrailPos.x||W*.5;s.ty=handTrailPos.y||H*.4;});
+  const cx=swords[0]?.x||W*.5,cy=swords[0]?.y||H*.5;
+  const pal=SWORD_PALETTES[swordStyle];const r=32+Math.sin(swordAnimFrame*.05)*9;
+  ctx.save();ctx.globalAlpha=.22*swordGlow;ctx.strokeStyle=pal.glow;ctx.lineWidth=1.5;ctx.setLineDash([5,10]);ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.restore();
 }
-
 function drawSummonMode(ctx,W,H){
-  const cnt=swordCount;
-  while(swords.length<cnt){
-    const angle=(swords.length/cnt)*Math.PI*2;
-    const r=Math.min(W,H)*.3;
-    const sx=W*.5+Math.cos(angle)*r;
-    const sy=H*.45+Math.sin(angle)*r*.6;
-    const sw=new Sword(sx,sy,angle,'summon');
-    swords.push(sw);
-  }
-  swords.forEach((s,i)=>{
-    const angle=(i/cnt)*Math.PI*2+swordAnimFrame*.012;
-    const r=Math.min(W,H)*.28;
-    const bx=handTrailPos.x||W*.5;
-    const by=handTrailPos.y||H*.45;
-    s.tx=bx+Math.cos(angle)*r;
-    s.ty=by+Math.sin(angle)*r*.65;
-    s.targetAngle=angle;
-  });
-  // Center energy ring
-  const bx=handTrailPos.x||W*.5;
-  const by=handTrailPos.y||H*.45;
+  const cnt=swordCount;while(swords.length<cnt){const a=(swords.length/cnt)*Math.PI*2;const r=Math.min(W,H)*.3;swords.push(new Sword(W*.5+Math.cos(a)*r,H*.45+Math.sin(a)*r*.6,a,'summon'));}
+  swords.forEach((s,i)=>{const a=(i/cnt)*Math.PI*2+swordAnimFrame*.012;const r=Math.min(W,H)*.28;s.tx=(handTrailPos.x||W*.5)+Math.cos(a)*r;s.ty=(handTrailPos.y||H*.45)+Math.sin(a)*r*.65;s.targetAngle=a;});
+  const bx=handTrailPos.x||W*.5,by=handTrailPos.y||H*.45;
   const pal=SWORD_PALETTES[swordStyle];
-  for(let ring=0;ring<3;ring++){
-    const rr=(60+ring*40)+Math.sin(swordAnimFrame*.04+ring*1)*12;
-    ctx.save();
-    ctx.globalAlpha=(0.12-ring*.02)*swordGlow;
-    ctx.strokeStyle=pal.glow;
-    ctx.lineWidth=2-ring*.5;
-    ctx.beginPath();ctx.arc(bx,by,rr,0,Math.PI*2);ctx.stroke();
-    ctx.restore();
-  }
+  for(let ring=0;ring<3;ring++){const rr=(62+ring*40)+Math.sin(swordAnimFrame*.04+ring)*12;ctx.save();ctx.globalAlpha=(.12-ring*.025)*swordGlow;ctx.strokeStyle=pal.glow;ctx.lineWidth=2-ring*.5;ctx.beginPath();ctx.arc(bx,by,rr,0,Math.PI*2);ctx.stroke();ctx.restore();}
 }
-
 function drawStormMode(ctx,W,H){
-  const cnt=Math.max(swordCount,4);
-  while(swords.length<cnt){
-    swords.push(new Sword(W*.5,H*.4,Math.random()*Math.PI*2,'storm'));
-  }
-  const cx=handTrailPos.x||W*.5;
-  const cy=handTrailPos.y||H*.4;
-  stormAngle+=0.04*(swordSpeed/5);
-  swords.forEach((s,i)=>{
-    const a=stormAngle+i*(Math.PI*2/cnt);
-    const spiralR=(80+i*25)*swordSize;
-    s.tx=cx+Math.cos(a)*spiralR;
-    s.ty=cy+Math.sin(a)*spiralR*.7;
-    s.angle=a+Math.PI/2;
-    s.spinning=true;
-  });
-  // Storm vortex lines
-  const pal=SWORD_PALETTES[swordStyle];
-  ctx.save();
-  ctx.globalAlpha=0.15*swordGlow;
-  ctx.strokeStyle=pal.glow;
-  ctx.lineWidth=1;
-  for(let i=0;i<12;i++){
-    const a=stormAngle*2+i*(Math.PI*2/12);
-    const r1=40, r2=180*swordSize;
-    ctx.beginPath();
-    ctx.moveTo(cx+Math.cos(a)*r1,cy+Math.sin(a)*r1*.7);
-    ctx.lineTo(cx+Math.cos(a+.4)*r2,cy+Math.sin(a+.4)*r2*.7);
-    ctx.stroke();
-  }
-  ctx.restore();
+  const cnt=Math.max(swordCount,4);while(swords.length<cnt)swords.push(new Sword(W*.5,H*.4,Math.random()*Math.PI*2,'storm'));
+  const cx=handTrailPos.x||W*.5,cy=handTrailPos.y||H*.4;stormAngle+=.04*(swordSpeed/5);
+  swords.forEach((s,i)=>{const a=stormAngle+i*(Math.PI*2/cnt);const sr=(82+i*26)*swordSize;s.tx=cx+Math.cos(a)*sr;s.ty=cy+Math.sin(a)*sr*.7;s.angle=a+Math.PI/2;s.spinning=true;});
+  const pal=SWORD_PALETTES[swordStyle];ctx.save();ctx.globalAlpha=.14*swordGlow;ctx.strokeStyle=pal.glow;ctx.lineWidth=1;
+  for(let i=0;i<12;i++){const a=stormAngle*2+i*(Math.PI*2/12);ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*40,cy+Math.sin(a)*40*.7);ctx.lineTo(cx+Math.cos(a+.4)*180*swordSize,cy+Math.sin(a+.4)*180*swordSize*.7);ctx.stroke();}ctx.restore();
 }
-
 function drawShieldMode(ctx,W,H){
-  // Get body center from pose if available, else use center
-  let bx=W*.5, by=H*.5;
-  if(poses.length>0){
-    const kps=poses[0].keypoints;
-    const ls=kps[5],rs=kps[6];
-    if(ls.score>.3&&rs.score>.3){
-      const asp=video.videoWidth/video.videoHeight;
-      const cAsp=W/H;
-      let scale,ox,oy;
-      if(asp>cAsp){scale=W/video.videoWidth;ox=0;oy=(H-video.videoHeight*scale)/2;}
-      else{scale=H/video.videoHeight;ox=(W-video.videoWidth*scale)/2;oy=0;}
-      bx=((ls.x+rs.x)/2)*scale+ox;
-      by=((ls.y+rs.y)/2)*scale+oy;
-      if(mirrored)bx=W-bx+ox*2;
-    }
-  }
-  const cnt=Math.min(swordCount,8);
-  while(swords.length<cnt){
-    swords.push(new Sword(bx,by-100,0,'shield'));
-  }
-  shieldAngle+=0.025*(swordSpeed/5);
-  swords.forEach((s,i)=>{
-    const a=shieldAngle+i*(Math.PI*2/cnt);
-    const r=100*swordSize;
-    s.tx=bx+Math.cos(a)*r;
-    s.ty=by+Math.sin(a)*r*.7-40;
-    s.angle=a+Math.PI*.5;
-  });
-  // Shield ring
-  const pal=SWORD_PALETTES[swordStyle];
-  ctx.save();
-  ctx.globalAlpha=0.2*swordGlow;
-  ctx.strokeStyle=pal.glow;
-  ctx.lineWidth=2;
-  ctx.beginPath();ctx.ellipse(bx,by-40,110*swordSize,80*swordSize,0,0,Math.PI*2);ctx.stroke();
-  ctx.restore();
+  let bx=W*.5,by=H*.5;
+  if(poses.length>0){const kps=poses[0].keypoints;const ls=kps[5],rs=kps[6];if(ls.score>.3&&rs.score>.3){const asp=video.videoWidth/video.videoHeight,cAsp=W/H;let scale,ox,oy;if(asp>cAsp){scale=W/video.videoWidth;ox=0;oy=(H-video.videoHeight*scale)/2;}else{scale=H/video.videoHeight;ox=(W-video.videoWidth*scale)/2;oy=0;}bx=((ls.x+rs.x)/2)*scale+ox;by=((ls.y+rs.y)/2)*scale+oy;if(mirrored)bx=W-bx+ox*2;}}
+  const cnt=Math.min(swordCount,8);while(swords.length<cnt)swords.push(new Sword(bx,by-100,0,'shield'));
+  shieldAngle+=.025*(swordSpeed/5);
+  swords.forEach((s,i)=>{const a=shieldAngle+i*(Math.PI*2/cnt);const r=100*swordSize;s.tx=bx+Math.cos(a)*r;s.ty=by+Math.sin(a)*r*.7-40;s.angle=a+Math.PI*.5;});
+  const pal=SWORD_PALETTES[swordStyle];ctx.save();ctx.globalAlpha=.2*swordGlow;ctx.strokeStyle=pal.glow;ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(bx,by-40,110*swordSize,80*swordSize,0,0,Math.PI*2);ctx.stroke();ctx.restore();
 }
 
-// Launch sword (phi kiếm)
 function launchSword(){
   if(!swordModeActive)return;
-  const pal=SWORD_PALETTES[swordStyle];
-  const W=swordCv.width, H=swordCv.height;
-  const sx=handTrailPos.x||W*.5;
-  const sy=handTrailPos.y||H*.4;
-  // Launch direction: upward with slight angle
-  const angle=(Math.random()-.5)*0.6;
-  const spd=(12+swordSpeed)*swordSize;
+  const pal=SWORD_PALETTES[swordStyle];const W=swordCv.width,H=swordCv.height;
+  const sx=handTrailPos.x||W*.5,sy=handTrailPos.y||H*.4;
+  const angle=(Math.random()-.5)*.6,spd=(12+swordSpeed)*swordSize;
   const ns=new Sword(sx,sy,-Math.PI*.5,'launch');
-  ns.launched=true;
-  ns.launchVx=Math.sin(angle)*spd;
-  ns.launchVy=-Math.cos(angle)*spd*1.2;
-  ns.life=1;
+  ns.launched=true;ns.launchVx=Math.sin(angle)*spd;ns.launchVy=-Math.cos(angle)*spd*1.2;
   swords.push(ns);
-  // Burst particles
-  for(let i=0;i<30;i++){
-    particles.push(new SwordParticle(sx,sy,pal,i%4===0?'star':'spark'));
-  }
-  fireGesture('🗡️ PHI KIẾM TIÊN','Kiếm thần xuất chiêu!',null,'sword');
+  for(let i=0;i<30;i++)particles.push(new SwordParticle(sx,sy,pal,i%4===0?'star':'spark'));
+  fireGesture('🗡️ PHI KIẾM','Kiếm thần xuất chiêu!',null,'sword');
 }
-
-// Summon burst
 function summonBurst(){
   if(!swordModeActive)return;
-  const pal=SWORD_PALETTES[swordStyle];
-  const W=swordCv.width, H=swordCv.height;
-  const cx=handTrailPos.x||W*.5;
-  const cy=handTrailPos.y||H*.45;
-  // Clear swords & re-summon with burst effect
-  for(let i=0;i<swordCount;i++){
-    const a=(i/swordCount)*Math.PI*2;
-    const s=new Sword(cx,cy,a,'summon');
-    swords.push(s);
-    for(let j=0;j<8;j++) particles.push(new SwordParticle(cx,cy,pal,'star'));
-  }
+  const pal=SWORD_PALETTES[swordStyle];const W=swordCv.width,H=swordCv.height;
+  const cx=handTrailPos.x||W*.5,cy=handTrailPos.y||H*.45;
+  swords=[];
+  for(let i=0;i<swordCount;i++){const a=(i/swordCount)*Math.PI*2;const s=new Sword(cx,cy,a,'summon');swords.push(s);for(let j=0;j<8;j++)particles.push(new SwordParticle(cx,cy,pal,'star'));}
   fireGesture('⚡ TRIỆU HỒI','Vạn kiếm quy tụ!',null,'sword');
 }
 
-// ══════════════════════════════════════════════
-// SWORD CONTROLS
-// ══════════════════════════════════════════════
+// Sword controls
 function togSwordMode(){
   swordModeActive=!swordModeActive;
   document.getElementById('tgSwordMain').classList.toggle('on',swordModeActive);
   document.getElementById('swordHud').classList.toggle('on',swordModeActive);
-  document.getElementById('sbSword').classList.toggle('active-gold',swordModeActive);
-  if(swordModeActive){
-    if(!handMode) togHand();
-    swords=[];
-    document.getElementById('shutterInner').classList.add('sword-on');
-    document.getElementById('shutterIco').textContent='🗡️';
-    document.getElementById('swordModeTxt').textContent='KIẾM TIÊN ON';
-  } else {
-    swords=[];particles=[];
-    document.getElementById('shutterInner').classList.remove('sword-on');
-    document.getElementById('shutterIco').textContent='📸';
-    document.getElementById('swordModeTxt').textContent='KIẾM TIÊN';
-  }
+  document.getElementById('sbSword').classList.toggle('active-gd',swordModeActive);
+  document.getElementById('qtSword').classList.toggle('on-gd',swordModeActive);
+  const sr=document.getElementById('shutterRing'),si=document.getElementById('shutterInner'),ico=document.getElementById('shutterIco');
+  if(swordModeActive){if(!handMode)togHand();swords=[];sr.classList.add('sword-mode');si.classList.add('sword-on');ico.textContent='🗡️';document.getElementById('swordModeTxt').textContent='KIẾM TIÊN ON';}
+  else{swords=[];particles=[];sr.classList.remove('sword-mode');si.classList.remove('sword-on');ico.textContent=imgModeActive?'🖼️':'📸';document.getElementById('swordModeTxt').textContent='KIẾM TIÊN';}
 }
 function setSwordMode(m){
-  swordMode=m;
-  swords=[];
-  ['fly','summon','storm','shield'].forEach(k=>{
-    document.getElementById('sm'+k.charAt(0).toUpperCase()+k.slice(1))?.classList.toggle('on',k===m);
-  });
+  swordMode=m;swords=[];
+  ['fly','summon','storm','shield'].forEach(k=>document.getElementById('sm'+k.charAt(0).toUpperCase()+k.slice(1))?.classList.toggle('on',k===m));
   const names={fly:'PHI KIẾM',summon:'TRIỆU HỒI',storm:'VŨ KIẾM',shield:'HỘ THỂ'};
   document.getElementById('swordModeTxt').textContent=names[m]||'KIẾM TIÊN';
 }
 function setSwordStyle(s){
   swordStyle=s;
-  ['classic','fire','ice','light'].forEach(k=>{
-    document.getElementById('style'+k.charAt(0).toUpperCase()+k.slice(1))?.classList.toggle('on',k===s);
-  });
+  ['classic','fire','ice','light'].forEach(k=>document.getElementById('style'+k.charAt(0).toUpperCase()+k.slice(1))?.classList.toggle('on',k===s));
 }
 function updSword(){
-  swordSpeed=+document.getElementById('sSwordSpeed').value;
-  swordSize=+document.getElementById('sSwordSize').value/100;
-  swordGlow=+document.getElementById('sSwordGlow').value/100;
-  swordCount=+document.getElementById('sSwordCount').value;
-  document.getElementById('vSwordSpeed').textContent=swordSpeed;
-  document.getElementById('vSwordSize').textContent=Math.round(swordSize*100)+'%';
-  document.getElementById('vSwordGlow').textContent=Math.round(swordGlow*100)+'%';
-  document.getElementById('vSwordCount').textContent=swordCount;
+  swordSpeed=+document.getElementById('sSwordSpeed').value;swordSize=+document.getElementById('sSwordSize').value/100;
+  swordGlow=+document.getElementById('sSwordGlow').value/100;swordCount=+document.getElementById('sSwordCount').value;
+  document.getElementById('vSwordSpeed').textContent=swordSpeed;document.getElementById('vSwordSize').textContent=Math.round(swordSize*100)+'%';
+  document.getElementById('vSwordGlow').textContent=Math.round(swordGlow*100)+'%';document.getElementById('vSwordCount').textContent=swordCount;
 }
 
-// ══════════════════════════════════════════════
+// ════════════════════════════════════
 // CONTROLS
-// ══════════════════════════════════════════════
+// ════════════════════════════════════
 function doSnap(){
-  if(swordModeActive && swordMode==='fly'){ launchSword(); return; }
-  if(timerOn) runTimer(takePhoto); else takePhoto();
+  if(swordModeActive&&swordMode==='fly'){launchSword();return;}
+  if(imgModeActive&&!swordModeActive){launchImgObjects();return;}
+  if(timerOn)runTimer(takePhoto);else takePhoto();
 }
 function runTimer(cb){
-  let n=3;
-  const d=document.getElementById('timerD');
+  let n=3;const d=document.getElementById('timerD');
   d.textContent=n;d.classList.add('on');
   const iv=setInterval(()=>{n--;if(n<=0){clearInterval(iv);d.classList.remove('on');cb();}else d.textContent=n;},1000);
 }
 function takePhoto(){
   const f=document.getElementById('flash');
-  f.style.cssText='opacity:1;transition:none';
-  setTimeout(()=>{f.style.cssText='opacity:0;transition:opacity .5s';},80);
-  const w=video.videoWidth||1920, h=video.videoHeight||1080;
-  capCv.width=w; capCv.height=h;
-  capCtx.save();
-  if(mirrored){capCtx.translate(w,0);capCtx.scale(-1,1);}
-  const fObj=FILTERS.find(x=>x.id===currentFxId);
-  const base=fObj&&fObj.css!=='none'?fObj.css:'';
+  f.style.cssText='opacity:1;transition:none';setTimeout(()=>{f.style.cssText='opacity:0;transition:opacity .5s';},80);
+  const w=video.videoWidth||1920,h=video.videoHeight||1080;
+  capCv.width=w;capCv.height=h;
+  capCtx.save();if(mirrored){capCtx.translate(w,0);capCtx.scale(-1,1);}
+  const fObj=FILTERS.find(x=>x.id===currentFxId);const base=fObj&&fObj.css!=='none'?fObj.css:'';
   capCtx.filter=[base,adjF].filter(Boolean).join(' ')||'none';
-  capCtx.drawImage(video,0,0,w,h);
-  capCtx.restore();
-  if((showDots||showSkel)&&poses.length>0) drawPoseSkel(capCtx,poses[0].keypoints,w,h,true);
-  const url=capCv.toDataURL('image/jpeg',.95);
-  const nm=currentFxId.toUpperCase();
-  addGal({type:'photo',url,nm});
+  capCtx.drawImage(video,0,0,w,h);capCtx.restore();
+  if((showDots||showSkel)&&poses.length>0)drawPoseSkel(capCtx,poses[0].keypoints,w,h,true);
+  addGal({type:'photo',url:capCv.toDataURL('image/jpeg',.95),nm:currentFxId.toUpperCase()});
 }
 function togMirror(){mirrored=!mirrored;updateMirrorUI();applyFx();}
-function updateMirrorUI(){
-  document.getElementById('btnMirror').classList.toggle('on',mirrored);
-  const tg=document.getElementById('tgMirrorS');
-  if(tg) tg.classList.toggle('on',mirrored);
-}
-function togGrid(){
-  gridOn=!gridOn;
-  document.getElementById('tgGridS')?.classList.toggle('on',gridOn);
-  // (grid overlay could be added to viewport)
-}
-function togTimer(){
-  timerOn=!timerOn;
-  document.getElementById('btnTimer').classList.toggle('on',timerOn);
-  document.getElementById('tgTimerS')?.classList.toggle('on',timerOn);
-}
-function togFS(){
-  const vp=document.querySelector('.viewport');
-  document.fullscreenElement?document.exitFullscreen():vp.requestFullscreen?.();
-}
+function updateMirrorUI(){document.getElementById('btnMirror').classList.toggle('on',mirrored);document.getElementById('tgMirrorS')?.classList.toggle('on',mirrored);}
+function togTimer(){timerOn=!timerOn;document.getElementById('btnTimer').classList.toggle('on',timerOn);document.getElementById('tgTimerS')?.classList.toggle('on',timerOn);}
+function togFS(){const vp=document.querySelector('.viewport');document.fullscreenElement?document.exitFullscreen():vp.requestFullscreen?.();}
 function resetAll(){
   document.getElementById('sBri').value=100;document.getElementById('sCon').value=100;
   document.getElementById('sSat').value=100;document.getElementById('sBlr').value=0;
   document.getElementById('sHue').value=0;document.getElementById('sSepia').value=0;
   updAdj();Object.assign(T,p3dPresets.flat);
   ['Per','Rx','Ry','Rz','Sc','Skx'].forEach(k=>{const el=document.getElementById('s'+k);if(el)el.value=k==='Sc'?100:0;});
-  upd3D();setFx('none');
-  mirrored=facingMode==='user';updateMirrorUI();applyFx();
+  upd3D();setFx('none');mirrored=facingMode==='user';updateMirrorUI();applyFx();
 }
-function togDetectFrame(){
-  detectFrameOn=!detectFrameOn;
-  document.getElementById('detectFrame').classList.toggle('on',detectFrameOn);
-  document.getElementById('tgFrame').classList.toggle('on',detectFrameOn);
-}
+function togDetectFrame(){detectFrameOn=!detectFrameOn;document.getElementById('detectFrame').classList.toggle('on',detectFrameOn);document.getElementById('tgFrame').classList.toggle('on',detectFrameOn);}
 
-// ══════════════════════════════════════════════
+// ════════════════════════════════════
 // RECORDING
-// ══════════════════════════════════════════════
+// ════════════════════════════════════
 function togRec(){isRec?stopRec():startRec();}
 function startRec(){
   if(!stream)return;
   const vw=video.videoWidth||1280,vh=video.videoHeight||720;
-  recCv=document.createElement('canvas');recCv.width=vw;recCv.height=vh;
-  recCtx=recCv.getContext('2d');
+  const recCv=document.createElement('canvas');recCv.width=vw;recCv.height=vh;
+  const recCtx=recCv.getContext('2d');
   isRec=true;recChunks=[];
   function df(){
-    if(!isRec)return;
-    recCtx.save();
-    if(mirrored){recCtx.translate(vw,0);recCtx.scale(-1,1);}
-    const fObj=FILTERS.find(x=>x.id===currentFxId);
-    const base=fObj&&fObj.css!=='none'?fObj.css:'';
+    if(!isRec)return;recCtx.save();if(mirrored){recCtx.translate(vw,0);recCtx.scale(-1,1);}
+    const fObj=FILTERS.find(x=>x.id===currentFxId);const base=fObj&&fObj.css!=='none'?fObj.css:'';
     recCtx.filter=[base,adjF].filter(Boolean).join(' ')||'none';
-    recCtx.drawImage(video,0,0,vw,vh);
-    recCtx.restore();
-    if((showDots||showSkel)&&poses.length>0) drawPoseSkel(recCtx,poses[0].keypoints,vw,vh,true);
+    recCtx.drawImage(video,0,0,vw,vh);recCtx.restore();
+    if((showDots||showSkel)&&poses.length>0)drawPoseSkel(recCtx,poses[0].keypoints,vw,vh,true);
     requestAnimationFrame(df);
   }
-  recStream=recCv.captureStream(30);
+  const recStream=recCv.captureStream(30);
   const opts=MediaRecorder.isTypeSupported('video/webm;codecs=vp9')?{mimeType:'video/webm;codecs=vp9'}:{};
   try{recorder=new MediaRecorder(recStream,opts);}catch(e){recorder=new MediaRecorder(recStream);}
   recorder.ondataavailable=e=>{if(e.data.size>0)recChunks.push(e.data);};
-  recorder.onstop=()=>{
-    const blob=new Blob(recChunks,{type:'video/webm'});
-    addGal({type:'video',url:URL.createObjectURL(blob),dur:(Date.now()-recStart)/1000});
-  };
+  recorder.onstop=()=>{const blob=new Blob(recChunks,{type:'video/webm'});addGal({type:'video',url:URL.createObjectURL(blob),dur:(Date.now()-recStart)/1000});};
   recorder.start(500);recStart=Date.now();df();
-  document.getElementById('recBtn').style.background='rgba(255,64,96,.2)';
-  document.getElementById('recBtn').textContent='⏹';
+  document.getElementById('recBtn').style.background='rgba(255,53,85,.2)';document.getElementById('recBtn').textContent='⏹';
   document.getElementById('recBadge').style.display='flex';
-  recIv=setInterval(()=>{
-    const s=Math.floor((Date.now()-recStart)/1000);
-    document.getElementById('recTm').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
-  },500);
+  recIv=setInterval(()=>{const s=Math.floor((Date.now()-recStart)/1000);document.getElementById('recTm').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');},500);
 }
-function stopRec(){
-  if(!isRec)return;
-  isRec=false;recorder?.stop();clearInterval(recIv);
-  document.getElementById('recBtn').style.background='';
-  document.getElementById('recBtn').textContent='⏺';
-  document.getElementById('recBadge').style.display='none';
-}
+function stopRec(){if(!isRec)return;isRec=false;recorder?.stop();clearInterval(recIv);document.getElementById('recBtn').style.background='';document.getElementById('recBtn').textContent='⏺';document.getElementById('recBadge').style.display='none';}
 
-// ══════════════════════════════════════════════
+// ════════════════════════════════════
 // GALLERY
-// ══════════════════════════════════════════════
+// ════════════════════════════════════
 function addGal(item){
-  gallery.unshift(item);
-  document.getElementById('galCntBig').textContent=gallery.length;
-  document.getElementById('emptyGal').style.display='none';
-  const grid=document.getElementById('galGrid');
-  const div=document.createElement('div');div.className='g-item';
-  if(item.type==='photo'){
-    div.innerHTML=`<img src="${item.url}"><span class="g-tag">${item.nm}</span><button class="g-dl" onclick="dlItem('${item.url}','photo','${item.nm}')">↓ TẢI</button>`;
-  }else{
-    const d=item.dur?item.dur.toFixed(0)+'s':'';
-    div.innerHTML=`<div class="g-vid">🎥</div><span class="g-tag v">VID ${d}</span><button class="g-dl" onclick="dlItem('${item.url}','video','')">↓ TẢI</button>`;
-  }
+  gallery.unshift(item);document.getElementById('galCntBig').textContent=gallery.length;document.getElementById('emptyGal').style.display='none';
+  const grid=document.getElementById('galGrid');const div=document.createElement('div');div.className='g-item';
+  if(item.type==='photo')div.innerHTML=`<img src="${item.url}"><span class="g-tag">${item.nm}</span><button class="g-dl" onclick="dlItem('${item.url}','photo','${item.nm}')">↓ TẢI</button>`;
+  else{const d=item.dur?item.dur.toFixed(0)+'s':'';div.innerHTML=`<div style="width:100%;height:100%;background:rgba(20,20,38,.8);display:flex;align-items:center;justify-content:center;font-size:1.6rem">🎥</div><span class="g-tag v">VID ${d}</span><button class="g-dl" onclick="dlItem('${item.url}','video','')">↓ TẢI</button>`;}
   grid.insertBefore(div,grid.firstChild);
 }
-function dlItem(url,type,name){
-  const a=document.createElement('a');a.href=url;
-  a.download=type==='photo'?`nexus_${name.toLowerCase()}_${Date.now()}.jpg`:`nexus_video_${Date.now()}.webm`;
-  a.click();
-}
+function dlItem(url,type,name){const a=document.createElement('a');a.href=url;a.download=type==='photo'?`nexus_${name.toLowerCase()}_${Date.now()}.jpg`:`nexus_video_${Date.now()}.webm`;a.click();}
 
-// ══════════════════════════════════════════════
+// ════════════════════════════════════
 // PANELS
-// ══════════════════════════════════════════════
+// ════════════════════════════════════
 let openPanelId=null;
 function openPanel(id){
   if(openPanelId===id){closeAllPanels();return;}
@@ -1609,324 +1301,183 @@ function openPanel(id){
   if(p){p.classList.add('open');openPanelId=id;}
   document.getElementById('overlayDim').classList.add('on');
 }
-function closeAllPanels(resetDim=true){
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('open'));
-  if(resetDim)document.getElementById('overlayDim').classList.remove('on');
-  openPanelId=null;
-}
-function setTab(t){
-  document.querySelectorAll('.tab-item').forEach(ti=>ti.classList.remove('on'));
-  document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1))?.classList.add('on');
-}
+function closeAllPanels(resetDim=true){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('open'));if(resetDim)document.getElementById('overlayDim').classList.remove('on');openPanelId=null;}
+function setTab(t){document.querySelectorAll('.tab-item').forEach(ti=>ti.classList.remove('on'));document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1))?.classList.add('on');}
 
-// ══════════════════════════════════════════════
+// ════════════════════════════════════
 // POSE DETECTION
-// ══════════════════════════════════════════════
+// ════════════════════════════════════
 async function loadPoseAI(){
   showAILoad('LOADING POSE AI...');
   try{
     await tf.ready();
-    poseDetector=await poseDetection.createDetector(
-      poseDetection.SupportedModels.MoveNet,
-      {modelType:poseDetection.movenet.modelType.SINGLEPOSE_THUNDER}
-    );
-    hideAILoad();
-    document.getElementById('aiInfoSec').style.display='block';
-    poseLoop();
-  }catch(e){
-    console.error(e);showAILoad('POSE AI ERROR');setTimeout(hideAILoad,3000);
-    poseMode=false;document.getElementById('tgPose').classList.remove('on');
-  }
+    poseDetector=await poseDetection.createDetector(poseDetection.SupportedModels.MoveNet,{modelType:poseDetection.movenet.modelType.SINGLEPOSE_THUNDER});
+    hideAILoad();document.getElementById('aiInfoSec').style.display='block';poseLoop();
+  }catch(e){showAILoad('POSE AI ERROR');setTimeout(hideAILoad,3000);poseMode=false;document.getElementById('tgPose').classList.remove('on');}
 }
 async function poseLoop(){
   poseRunning=true;
   while(poseMode){
     if(video.readyState>=2&&video.videoWidth>0){
-      try{
-        poses=await poseDetector.estimatePoses(video);
-        if(poses.length>0){updatePosePanel(poses[0]);if(fallMode)checkFall(poses[0]);}
-        else document.getElementById('aiPpl').textContent='0';
-      }catch(e){}
+      try{poses=await poseDetector.estimatePoses(video);if(poses.length>0){updatePosePanel(poses[0]);if(fallMode)checkFall(poses[0]);}else document.getElementById('aiPpl').textContent='0';}catch(e){}
     }
     await sleep(70);
   }
   poseRunning=false;poses=[];poseCtx.clearRect(0,0,poseCv.width,poseCv.height);
 }
 function updatePosePanel(pose){
-  const kps=pose.keypoints;
-  document.getElementById('aiPpl').textContent=poses.length;
+  const kps=pose.keypoints;document.getElementById('aiPpl').textContent=poses.length;
   const ls=kps[5],rs=kps[6],lh=kps[11],rh=kps[12];
   if(ls.score>.3&&rs.score>.3&&lh.score>.3&&rh.score>.3){
-    const sX=(ls.x+rs.x)/2,sY=(ls.y+rs.y)/2;
-    const hX=(lh.x+rh.x)/2,hY=(lh.y+rh.y)/2;
+    const sX=(ls.x+rs.x)/2,sY=(ls.y+rs.y)/2,hX=(lh.x+rh.x)/2,hY=(lh.y+rh.y)/2;
     const ang=Math.abs(Math.atan2(hY-sY,hX-sX)*180/Math.PI);
     document.getElementById('aiAngle').textContent=ang.toFixed(0)+'°';
-    const fallen=ang<35||ang>145;
-    const conf=fallen?100:Math.min(100,Math.round((1-Math.abs(ang-90)/90)*100));
-    document.getElementById('aiPose').textContent=fallen?'FALLEN ⚠':'ĐỨNG THẲNG ✓';
-    document.getElementById('aiPose').className='ai-val '+(fallen?'warn':'ok');
+    const fallen=ang<35||ang>145;const conf=fallen?100:Math.min(100,Math.round((1-Math.abs(ang-90)/90)*100));
+    document.getElementById('aiPose').textContent=fallen?'FALLEN ⚠':'ĐỨNG THẲNG ✓';document.getElementById('aiPose').className='ai-val '+(fallen?'warn':'ok');
     document.getElementById('confBar').style.width=conf+'%';
   }
-  const kpGrid=document.getElementById('kpGrid');
-  kpGrid.innerHTML=kps.map((kp,i)=>{
-    const d=kp.score>.38;
-    return`<div class="kp-it ${d?'det':''}"><div class="kp-d"></div><span>${KPN[i]?.replace(/_/g,' ')}</span></div>`;
-  }).join('');
+  document.getElementById('kpGrid').innerHTML=kps.map((kp,i)=>{const d=kp.score>.38;return`<div class="kp-it ${d?'det':''}"><div class="kp-d"></div><span>${KPN[i]?.replace(/_/g,' ')}</span></div>`;}).join('');
 }
 function checkFall(pose){
-  const kps=pose.keypoints;
-  const ls=kps[5],rs=kps[6],lh=kps[11],rh=kps[12];
+  const kps=pose.keypoints;const ls=kps[5],rs=kps[6],lh=kps[11],rh=kps[12];
   if(ls.score<.3||rs.score<.3||lh.score<.3||rh.score<.3)return;
-  const sX=(ls.x+rs.x)/2,sY=(ls.y+rs.y)/2;
-  const hX=(lh.x+rh.x)/2,hY=(lh.y+rh.y)/2;
+  const sX=(ls.x+rs.x)/2,sY=(ls.y+rs.y)/2,hX=(lh.x+rh.x)/2,hY=(lh.y+rh.y)/2;
   const ang=Math.abs(Math.atan2(hY-sY,hX-sX)*180/Math.PI);
-  if((ang<35||ang>145)&&!fallActive){
-    fallActive=true;
-    document.getElementById('fallOv').classList.add('on');
-    if(fallTid)clearTimeout(fallTid);
-    fallTid=setTimeout(()=>{fallActive=false;document.getElementById('fallOv').classList.remove('on');},4000);
-  }
+  if((ang<35||ang>145)&&!fallActive){fallActive=true;document.getElementById('fallOv').classList.add('on');if(fallTid)clearTimeout(fallTid);fallTid=setTimeout(()=>{fallActive=false;document.getElementById('fallOv').classList.remove('on');},4000);}
 }
 
-// ══════════════════════════════════════════════
+// ════════════════════════════════════
 // HAND DETECTION
-// ══════════════════════════════════════════════
+// ════════════════════════════════════
 async function loadHandAI(){
   showAILoad('LOADING HAND AI...');
   try{
     await tf.ready();
-    handDetector=await handPoseDetection.createDetector(
-      handPoseDetection.SupportedModels.MediaPipeHands,
-      {runtime:'tfjs',modelType:'lite',maxHands:2}
-    );
-    hideAILoad();
-    document.getElementById('handCard').style.display='block';
-    document.getElementById('aiInfoSec').style.display='block';
-    handLoop();
-  }catch(e){
-    console.error(e);showAILoad('HAND AI ERROR');setTimeout(hideAILoad,3000);
-    handMode=false;document.getElementById('tgHand').classList.remove('on');
-  }
+    handDetector=await handPoseDetection.createDetector(handPoseDetection.SupportedModels.MediaPipeHands,{runtime:'tfjs',modelType:'lite',maxHands:2});
+    hideAILoad();document.getElementById('handCard').style.display='block';document.getElementById('aiInfoSec').style.display='block';handLoop();
+  }catch(e){showAILoad('HAND AI ERROR');setTimeout(hideAILoad,3000);handMode=false;document.getElementById('tgHand').classList.remove('on');}
 }
 async function handLoop(){
   handRunning=true;
   while(handMode){
     if(video.readyState>=2&&video.videoWidth>0){
-      try{
-        hands=await handDetector.estimateHands(video);
-        if(hands.length>0) processHands(hands);
-        else {document.getElementById('handGest').textContent='—';prevGest='';}
-      }catch(e){}
+      try{hands=await handDetector.estimateHands(video);if(hands.length>0)processHands(hands);else{document.getElementById('handGest').textContent='—';prevGest='';}}catch(e){}
     }
     await sleep(60);
   }
   handRunning=false;hands=[];handCtx.clearRect(0,0,handCv.width,handCv.height);
 }
-
 function processHands(hs){
-  const h=hs[0];
-  const lm=h.keypoints;
-  if(!lm||lm.length<21)return;
-  const wrist=lm[0];
-  const vW=video.videoWidth||640;
-  const vH=video.videoHeight||480;
-
-  // Map wrist to canvas coords
-  const W=swordCv.width, H=swordCv.height;
-  const asp=vW/vH, cAsp=W/H;
-  let scale,ox,oy;
-  if(asp>cAsp){scale=W/vW;ox=0;oy=(H-vH*scale)/2;}
-  else{scale=H/vH;ox=(W-vW*scale)/2;oy=0;}
-  let wx=wrist.x*scale+ox;
-  if(mirrored) wx=W-wx+ox*2;
-  const wy=wrist.y*scale+oy;
-
-  // Smooth
-  handTrailPos.x=handTrailPos.x*.7+wx*.3;
-  handTrailPos.y=handTrailPos.y*.7+wy*.3;
-
-  // Finger states
-  const fs=getFingerStates(lm);
-  const gest=recognizeGesture(fs,lm);
+  const h=hs[0];const lm=h.keypoints;if(!lm||lm.length<21)return;
+  const wrist=lm[0],vW=video.videoWidth||640,vH=video.videoHeight||480;
+  const W=swordCv.width,H=swordCv.height;
+  const asp=vW/vH,cAsp=W/H;let scale,ox,oy;
+  if(asp>cAsp){scale=W/vW;ox=0;oy=(H-vH*scale)/2;}else{scale=H/vH;ox=(W-vW*scale)/2;oy=0;}
+  let wx=wrist.x*scale+ox;if(mirrored)wx=W-wx+ox*2;const wy=wrist.y*scale+oy;
+  handTrailPos.x=handTrailPos.x*.7+wx*.3;handTrailPos.y=handTrailPos.y*.7+wy*.3;
+  const fs=getFingerStates(lm);const gest=recognizeGesture(fs,lm);
   document.getElementById('handGest').textContent=gest||'—';
-
   if(gest&&gest!==prevGest){
-    // Sword gestures
     if(swordModeActive){
-      if(gest==='OPEN PALM 🖐') launchSword();
-      else if(gest==='PEACE ✌') summonBurst();
+      if(gest==='OPEN PALM 🖐')launchSword();
+      else if(gest==='PEACE ✌')summonBurst();
       else if(gest==='HANG LOOSE 🤙'){setSwordMode('storm');fireGesture('🌀 VŨ KIẾM','Bão kiếm vô thiên!',null,'sword');}
       else if(gest==='FIST ✊'){setSwordMode('shield');fireGesture('🛡️ HỘ THỂ','Kiếm trận hộ thân!',null,'sword');}
       else if(gest==='POINT ☝'){setSwordMode('fly');fireGesture('🗡️ PHI KIẾM','Theo tay kiếm sĩ!',null,'sword');}
-    } else if(gestMode){
-      if(gest==='OPEN PALM 🖐') fireGesture(gest,'📸 Chụp ảnh!',()=>takePhoto());
-      else if(gest==='FIST ✊') fireGesture(gest,isRec?'⏹ Dừng quay':'⏺ Bắt đầu quay',()=>togRec());
-      else if(gest==='PEACE ✌') fireGesture(gest,'🎨 Bộ lọc kế',()=>{fxIdx=(fxIdx+1)%FILTERS.length;setFx(FILTERS[fxIdx].id);});
-      else if(gest==='POINT ☝') fireGesture(gest,'🦴 Toggle Pose AI',()=>togPose());
-      else if(gest==='HANG LOOSE 🤙') fireGesture(gest,'🎲 3D ngẫu nhiên',()=>{
-        const ps=Object.keys(p3dPresets).filter(k=>k!=='flat');p3d(ps[Math.floor(Math.random()*ps.length)]);
-      });
+    }
+    if(imgModeActive&&!swordModeActive){
+      if(gest==='OPEN PALM 🖐')launchImgObjects();
+      else if(gest==='PEACE ✌'){setImgEffect('orbit');fireGesture('🪐 QUỸ ĐẠO','Ảnh bay theo quỹ đạo!',null,'img');}
+      else if(gest==='HANG LOOSE 🤙'){setImgEffect('spiral');fireGesture('🌀 XOÁY ỐC','Xoáy ốc không gian!',null,'img');}
+      else if(gest==='FIST ✊'){setImgEffect('float');fireGesture('🌊 LƠ LỬNG','Ảnh lơ lửng không gian!',null,'img');}
+    }
+    if(gestMode&&!swordModeActive&&!imgModeActive){
+      if(gest==='OPEN PALM 🖐')fireGesture(gest,'📸 Chụp ảnh!',()=>takePhoto());
+      else if(gest==='FIST ✊')fireGesture(gest,isRec?'⏹ Dừng quay':'⏺ Bắt đầu quay',()=>togRec());
+      else if(gest==='PEACE ✌')fireGesture(gest,'🎨 Bộ lọc kế',()=>{fxIdx=(fxIdx+1)%FILTERS.length;setFx(FILTERS[fxIdx].id);});
+      else if(gest==='POINT ☝')fireGesture(gest,'🦴 Toggle AI',()=>togPose());
+      else if(gest==='HANG LOOSE 🤙')fireGesture(gest,'🎲 3D ngẫu nhiên',()=>{const ps=Object.keys(p3dPresets).filter(k=>k!=='flat');p3d(ps[Math.floor(Math.random()*ps.length)]);});
     }
     prevGest=gest;
   }
-
-  // Pinch zoom
-  const td=lm[4],id2=lm[8];
-  const pDist=Math.hypot(td.x-id2.x,td.y-id2.y)/vW;
-  if(pDist<0.05&&!fs.index&&!fs.middle){
+  const td=lm[4],id2=lm[8];const pDist=Math.hypot(td.x-id2.x,td.y-id2.y)/vW;
+  if(pDist<.05&&!fs.index&&!fs.middle){
     if(!pinchActive){pinchActive=true;pinchBaseDist=pDist;pinchBaseScale=T.sc;}
-    else{T.sc=Math.max(.5,Math.min(2.2,pinchBaseScale*(pDist/Math.max(pinchBaseDist,.001))));
-      document.getElementById('sSc').value=Math.round(T.sc*100);applyFx();}
+    else{T.sc=Math.max(.5,Math.min(2.2,pinchBaseScale*(pDist/Math.max(pinchBaseDist,.001))));document.getElementById('sSc').value=Math.round(T.sc*100);applyFx();}
   }else pinchActive=false;
 }
-
-function getFingerStates(lm){
-  return{
-    thumb:Math.abs(lm[4].x-lm[2].x)/(video.videoWidth||1280)>0.04,
-    index:lm[8].y<lm[6].y,
-    middle:lm[12].y<lm[10].y,
-    ring:lm[16].y<lm[14].y,
-    pinky:lm[20].y<lm[18].y,
-  };
-}
+function getFingerStates(lm){return{thumb:Math.abs(lm[4].x-lm[2].x)/(video.videoWidth||1280)>.04,index:lm[8].y<lm[6].y,middle:lm[12].y<lm[10].y,ring:lm[16].y<lm[14].y,pinky:lm[20].y<lm[18].y};}
 function recognizeGesture(fs,lm){
-  const ext=[fs.thumb,fs.index,fs.middle,fs.ring,fs.pinky];
-  const cnt=ext.filter(Boolean).length;
-  if(cnt>=4)return'OPEN PALM 🖐';
-  if(cnt===0)return'FIST ✊';
+  const ext=[fs.thumb,fs.index,fs.middle,fs.ring,fs.pinky];const cnt=ext.filter(Boolean).length;
+  if(cnt>=4)return'OPEN PALM 🖐';if(cnt===0)return'FIST ✊';
   if(fs.index&&fs.middle&&!fs.ring&&!fs.pinky&&!fs.thumb)return'PEACE ✌';
   if(fs.index&&!fs.middle&&!fs.ring&&!fs.pinky)return'POINT ☝';
   if(fs.thumb&&fs.pinky&&!fs.index&&!fs.middle&&!fs.ring)return'HANG LOOSE 🤙';
   return'';
 }
-
 function fireGesture(nm,desc,fn,type='normal'){
-  if(gestCommandCooldown)return;
-  gestCommandCooldown=true;
-  const gb=document.getElementById('gestBadge');
-  const ga=document.getElementById('gestAction');
+  if(gestCommandCooldown)return;gestCommandCooldown=true;
+  const gb=document.getElementById('gestBadge'),ga=document.getElementById('gestAction');
   gb.textContent=nm;ga.textContent=desc;
-  gb.className='gest-badge show'+(type==='sword'?' sword':'');
-  ga.classList.add('show');
-  fn?.();
-  setTimeout(()=>{
-    gb.classList.remove('show','sword');ga.classList.remove('show');
-    gestCommandCooldown=false;
-  },1800);
+  gb.className='gest-badge show'+(type==='sword'?' sword':type==='img'?' img':'');
+  ga.classList.add('show');fn?.();
+  setTimeout(()=>{gb.classList.remove('show','sword','img');ga.classList.remove('show');gestCommandCooldown=false;},1900);
 }
 
-// ══════════════════════════════════════════════
+// ════════════════════════════════════
 // POSE DRAW
-// ══════════════════════════════════════════════
+// ════════════════════════════════════
 function drawPoseSkel(ctx,kps,cw,ch,isCapture){
-  if(!kps)return;
-  ctx.clearRect(0,0,cw,ch);
+  if(!kps)return;ctx.clearRect(0,0,cw,ch);
   const vw=video.videoWidth||640,vh=video.videoHeight||480;
-  const asp=vw/vh,cAsp=cw/ch;
-  let scale,ox,oy;
-  if(asp>cAsp){scale=cw/vw;ox=0;oy=(ch-vh*scale)/2;}
-  else{scale=ch/vh;ox=(cw-vw*scale)/2;oy=0;}
-  function kpPos(kp){
-    let x=kp.x*scale+ox;
-    if(mirrored&&!isCapture)x=cw-x+ox*2;
-    return[x,kp.y*scale+oy];
-  }
-  if(showSkel){
-    ctx.lineWidth=isCapture?3:2;ctx.lineCap='round';
-    CONN.forEach(([a,b])=>{
-      const ka=kps[a],kb=kps[b];
-      if(!ka||!kb||ka.score<.33||kb.score<.33)return;
-      const[ax,ay]=kpPos(ka);const[bx,by]=kpPos(kb);
-      const g=ctx.createLinearGradient(ax,ay,bx,by);
-      g.addColorStop(0,'rgba(0,240,255,.95)');g.addColorStop(1,'rgba(255,45,120,.95)');
-      ctx.strokeStyle=g;ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.stroke();
-    });
-  }
-  if(showDots){
-    kps.forEach((kp,i)=>{
-      if(kp.score<.33)return;
-      const[x,y]=kpPos(kp);const r=isCapture?6:4.5;
-      ctx.beginPath();ctx.arc(x,y,r*2.5,0,Math.PI*2);
-      ctx.fillStyle='rgba(0,240,255,.1)';ctx.fill();
-      const g2=ctx.createRadialGradient(x-r*.3,y-r*.3,0,x,y,r);
-      g2.addColorStop(0,'#fff');g2.addColorStop(.5,'#00f0ff');g2.addColorStop(1,'#ff2d78');
-      ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=g2;ctx.fill();
-    });
-  }
+  const asp=vw/vh,cAsp=cw/ch;let scale,ox,oy;
+  if(asp>cAsp){scale=cw/vw;ox=0;oy=(ch-vh*scale)/2;}else{scale=ch/vh;ox=(cw-vw*scale)/2;oy=0;}
+  function kpPos(kp){let x=kp.x*scale+ox;if(mirrored&&!isCapture)x=cw-x+ox*2;return[x,kp.y*scale+oy];}
+  if(showSkel){ctx.lineWidth=isCapture?3:2;ctx.lineCap='round';
+    CONN.forEach(([a,b])=>{const ka=kps[a],kb=kps[b];if(!ka||!kb||ka.score<.33||kb.score<.33)return;const[ax,ay]=kpPos(ka),[bx,by]=kpPos(kb);const g=ctx.createLinearGradient(ax,ay,bx,by);g.addColorStop(0,'rgba(0,238,255,.95)');g.addColorStop(1,'rgba(255,32,96,.95)');ctx.strokeStyle=g;ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.stroke();});}
+  if(showDots){kps.forEach((kp,i)=>{if(kp.score<.33)return;const[x,y]=kpPos(kp),r=isCapture?6:4.5;ctx.beginPath();ctx.arc(x,y,r*2.5,0,Math.PI*2);ctx.fillStyle='rgba(0,238,255,.1)';ctx.fill();const g2=ctx.createRadialGradient(x-r*.3,y-r*.3,0,x,y,r);g2.addColorStop(0,'#fff');g2.addColorStop(.5,'#00eeff');g2.addColorStop(1,'#ff2060');ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=g2;ctx.fill();});}
 }
 function drawHands(ctx,hs,cw,ch){
   ctx.clearRect(0,0,cw,ch);
   const vw=video.videoWidth||640,vh=video.videoHeight||480;
-  const asp=vw/vh,cAsp=cw/ch;
-  let scale,ox,oy;
-  if(asp>cAsp){scale=cw/vw;ox=0;oy=(ch-vh*scale)/2;}
-  else{scale=ch/vh;ox=(cw-vw*scale)/2;oy=0;}
+  const asp=vw/vh,cAsp=cw/ch;let scale,ox,oy;
+  if(asp>cAsp){scale=cw/vw;ox=0;oy=(ch-vh*scale)/2;}else{scale=ch/vh;ox=(cw-vw*scale)/2;oy=0;}
   hs.forEach((h,hi)=>{
     const lm=h.keypoints;if(!lm)return;
-    const col=hi===0?'rgba(0,240,255,.85)':'rgba(255,45,120,.85)';
-    const colG=hi===0?'rgba(0,240,255,.12)':'rgba(255,45,120,.12)';
+    const col=hi===0?'rgba(0,238,255,.85)':'rgba(255,32,96,.85)';
+    const colG=hi===0?'rgba(0,238,255,.12)':'rgba(255,32,96,.12)';
     function pos(p){let x=p.x*scale+ox;if(mirrored)x=cw-(p.x*scale+ox)+ox*2;return[x,p.y*scale+oy];}
     ctx.lineWidth=1.5;ctx.strokeStyle=col;ctx.lineCap='round';
-    HAND_CONN.forEach(([a,b])=>{
-      const[ax,ay]=pos(lm[a]);const[bx,by]=pos(lm[b]);
-      ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.stroke();
-    });
-    lm.forEach((p,i)=>{
-      const[x,y]=pos(p);const isTip=[4,8,12,16,20].includes(i);const r=isTip?5:3;
-      ctx.beginPath();ctx.arc(x,y,r*2,0,Math.PI*2);ctx.fillStyle=colG;ctx.fill();
-      ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=isTip?'#fff':col;ctx.fill();
-    });
+    HAND_CONN.forEach(([a,b])=>{const[ax,ay]=pos(lm[a]),[bx,by]=pos(lm[b]);ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.stroke();});
+    lm.forEach((p,i)=>{const[x,y]=pos(p);const isTip=[4,8,12,16,20].includes(i);const r=isTip?5:3;ctx.beginPath();ctx.arc(x,y,r*2,0,Math.PI*2);ctx.fillStyle=colG;ctx.fill();ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=isTip?'#fff':col;ctx.fill();});
   });
 }
 
-// ══════════════════════════════════════════════
+// ════════════════════════════════════
 // AI TOGGLES
-// ══════════════════════════════════════════════
-async function togPose(){
-  poseMode=!poseMode;document.getElementById('tgPose').classList.toggle('on',poseMode);
-  if(poseMode){if(!poseDetector)await loadPoseAI();else if(!poseRunning)poseLoop();}
-  else{poses=[];if(!handMode)document.getElementById('aiInfoSec').style.display='none';}
-}
-async function togHand(){
-  handMode=!handMode;document.getElementById('tgHand').classList.toggle('on',handMode);
-  if(handMode){if(!handDetector)await loadHandAI();else if(!handRunning)handLoop();}
-  else{hands=[];document.getElementById('handCard').style.display='none';}
-}
-async function togGest(){
-  gestMode=!gestMode;document.getElementById('tgGest').classList.toggle('on',gestMode);
-  if(gestMode&&!handMode)await togHand();
-}
-async function togFall(){
-  fallMode=!fallMode;document.getElementById('tgFall').classList.toggle('on',fallMode);
-  if(fallMode&&!poseMode)await togPose();
-}
-async function togDots(){
-  showDots=!showDots;document.getElementById('tgDots').classList.toggle('on',showDots);
-  if(showDots&&!poseMode)await togPose();
-}
-async function togSkel(){
-  showSkel=!showSkel;document.getElementById('tgSkel').classList.toggle('on',showSkel);
-  if(showSkel&&!poseMode)await togPose();
-}
+// ════════════════════════════════════
+async function togPose(){poseMode=!poseMode;document.getElementById('tgPose').classList.toggle('on',poseMode);document.getElementById('qtPose').classList.toggle('on',poseMode);if(poseMode){if(!poseDetector)await loadPoseAI();else if(!poseRunning)poseLoop();}else{poses=[];if(!handMode)document.getElementById('aiInfoSec').style.display='none';}}
+async function togHand(){handMode=!handMode;document.getElementById('tgHand').classList.toggle('on',handMode);document.getElementById('qtHand').classList.toggle('on',handMode);if(handMode){if(!handDetector)await loadHandAI();else if(!handRunning)handLoop();}else{hands=[];document.getElementById('handCard').style.display='none';}}
+async function togGest(){gestMode=!gestMode;document.getElementById('tgGest').classList.toggle('on',gestMode);document.getElementById('qtGest').classList.toggle('on',gestMode);if(gestMode&&!handMode)await togHand();}
+async function togFall(){fallMode=!fallMode;document.getElementById('tgFall').classList.toggle('on',fallMode);if(fallMode&&!poseMode)await togPose();}
+async function togDots(){showDots=!showDots;document.getElementById('tgDots').classList.toggle('on',showDots);if(showDots&&!poseMode)await togPose();}
+async function togSkel(){showSkel=!showSkel;document.getElementById('tgSkel').classList.toggle('on',showSkel);if(showSkel&&!poseMode)await togPose();}
 
-// ══════════════════════════════════════════════
+// ════════════════════════════════════
 // HELPERS
-// ══════════════════════════════════════════════
-function showAILoad(msg){const el=document.getElementById('aiLoad');el.lastChild.textContent=' '+msg;el.classList.add('on');}
+// ════════════════════════════════════
+function showAILoad(msg){document.getElementById('aiLoad').querySelector('span').textContent=msg;document.getElementById('aiLoad').classList.add('on');}
 function hideAILoad(){document.getElementById('aiLoad').classList.remove('on');}
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
-// ══════════════════════════════════════════════
+// ════════════════════════════════════
 // KEYBOARD
-// ══════════════════════════════════════════════
+// ════════════════════════════════════
 document.addEventListener('keydown',e=>{
   if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
   if(e.code==='Space'){e.preventDefault();doSnap();}
-  if(e.code==='KeyG')togGrid();
-  if(e.code==='KeyM')togMirror();
-  if(e.code==='KeyT')togTimer();
-  if(e.code==='KeyR')togRec();
-  if(e.code==='KeyK')togSwordMode();
+  if(e.code==='KeyM')togMirror();if(e.code==='KeyT')togTimer();if(e.code==='KeyR')togRec();
+  if(e.code==='KeyK')togSwordMode();if(e.code==='KeyI')togImgMode();
   if(e.code==='Escape')closeAllPanels();
   if(e.code==='ArrowLeft'){fxIdx=(fxIdx-1+FILTERS.length)%FILTERS.length;setFx(FILTERS[fxIdx].id);}
   if(e.code==='ArrowRight'){fxIdx=(fxIdx+1)%FILTERS.length;setFx(FILTERS[fxIdx].id);}
