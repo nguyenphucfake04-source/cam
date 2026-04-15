@@ -12,26 +12,21 @@ body { background:#000; overflow:hidden; font-family:'Share Tech Mono',monospace
 #threeCanvas { position:fixed; inset:0; z-index:1; }
 #handCanvas  { position:fixed; inset:0; z-index:3; pointer-events:none; }
 
-/* ── Scanlines ── */
 body::after {
   content:''; position:fixed; inset:0; z-index:99; pointer-events:none;
   background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.04) 3px,rgba(0,0,0,0.04) 4px);
 }
-
-/* ── Noise grain ── */
 body::before {
   content:''; position:fixed; inset:0; z-index:98; pointer-events:none; opacity:.25;
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
 }
 
-/* ── Corner brackets ── */
 .brkt { position:fixed; width:44px; height:44px; z-index:20; border-color:rgba(0,245,255,.35); border-style:solid; }
 .brkt.tl { top:18px; left:18px; border-width:2px 0 0 2px; }
 .brkt.tr { top:18px; right:18px; border-width:2px 2px 0 0; }
 .brkt.bl { bottom:18px; left:18px; border-width:0 0 2px 2px; }
 .brkt.br { bottom:18px; right:18px; border-width:0 2px 2px 0; }
 
-/* ── TOP HUD ── */
 #hud {
   position:fixed; top:0; left:0; right:0; z-index:20;
   display:flex; align-items:center; justify-content:space-between;
@@ -51,7 +46,6 @@ body::before {
 }
 .hud-right span { color:#00f5ff; }
 
-/* ── GESTURE BADGE ── */
 #badge {
   position:fixed; bottom:26px; left:50%; transform:translateX(-50%);
   z-index:20; padding:10px 30px; border-radius:40px;
@@ -64,13 +58,19 @@ body::before {
 #badge.grab  { color:#ff0090; border-color:rgba(255,0,144,.4); box-shadow:0 0 20px rgba(255,0,144,.15); }
 #badge.rot   { color:#7fff00; border-color:rgba(127,255,0,.4);  box-shadow:0 0 20px rgba(127,255,0,.15); }
 #badge.pinch { color:#ffaa00; border-color:rgba(255,170,0,.4);  box-shadow:0 0 20px rgba(255,170,0,.15); }
+#badge.throw { color:#aa44ff; border-color:rgba(170,68,255,.5); box-shadow:0 0 20px rgba(170,68,255,.2); animation:throwPulse .4s ease-out; }
+@keyframes throwPulse { 0%{transform:translateX(-50%) scale(1.15)} 100%{transform:translateX(-50%) scale(1)} }
 
 /* ── LEFT PANEL ── */
 #leftPanel {
   position:fixed; left:20px; top:50%; transform:translateY(-50%);
   z-index:20; display:flex; flex-direction:column; gap:7px;
+  max-height:90vh; overflow-y:auto;
 }
+#leftPanel::-webkit-scrollbar { width:2px; }
+#leftPanel::-webkit-scrollbar-thumb { background:rgba(0,245,255,.2); }
 .panel-lbl { font-size:.52rem; letter-spacing:3px; color:rgba(0,245,255,.35); margin-bottom:3px; }
+.panel-lbl.img-lbl { color:rgba(255,170,0,.45); margin-top:4px; }
 .obj-btn {
   background:rgba(0,3,15,.8); border:1px solid rgba(0,245,255,.18);
   color:rgba(0,245,255,.5); padding:8px 16px; border-radius:5px;
@@ -85,7 +85,25 @@ body::before {
   box-shadow:0 0 14px rgba(0,245,255,.2);
 }
 .obj-btn.active::before { content:'▶ '; font-size:.5rem; }
+
+/* Image object buttons */
+.img-btn {
+  background:rgba(0,3,15,.8); border:1px solid rgba(255,170,0,.2);
+  color:rgba(255,170,0,.6); padding:8px 16px; border-radius:5px;
+  font-family:'Share Tech Mono',monospace; font-size:.62rem; letter-spacing:2px;
+  cursor:pointer; transition:all .2s; backdrop-filter:blur(8px);
+  text-align:left;
+}
+.img-btn:hover { border-color:rgba(255,170,0,.7); color:#ffaa00; background:rgba(255,170,0,.07); }
+.img-btn.active {
+  border-color:#ffaa00; color:#ffaa00;
+  background:rgba(255,170,0,.1);
+  box-shadow:0 0 14px rgba(255,170,0,.25);
+}
+.img-btn.active::before { content:'▶ '; font-size:.5rem; }
+
 .divider { height:1px; background:rgba(0,245,255,.1); margin:2px 0; }
+
 .reset-btn {
   background:rgba(0,3,15,.8); border:1px solid rgba(255,0,144,.2);
   color:rgba(255,0,144,.6); padding:7px 16px; border-radius:5px;
@@ -94,17 +112,30 @@ body::before {
 }
 .reset-btn:hover { border-color:rgba(255,0,144,.6); color:#ff0090; box-shadow:0 0 12px rgba(255,0,144,.2); }
 
-/* ── RIGHT GUIDE ── */
+/* RESET ALL — more prominent */
+.reset-all-btn {
+  background:rgba(0,3,15,.85); border:1px solid rgba(255,0,144,.45);
+  color:rgba(255,0,144,.9); padding:8px 16px; border-radius:5px;
+  font-family:'Share Tech Mono',monospace; font-size:.6rem; letter-spacing:2px;
+  cursor:pointer; transition:all .2s; backdrop-filter:blur(8px);
+  text-align:center;
+  box-shadow:0 0 8px rgba(255,0,144,.1);
+}
+.reset-all-btn:hover {
+  border-color:#ff0090; color:#fff;
+  background:rgba(255,0,144,.12);
+  box-shadow:0 0 18px rgba(255,0,144,.35);
+}
+
 #guide {
   position:fixed; right:248px; bottom:70px; z-index:20;
   display:flex; flex-direction:column; gap:5px;
 }
 .guide-row { display:flex; align-items:center; gap:8px; }
 .g-ico { font-size:.9rem; width:22px; text-align:center; }
-.g-key { font-size:.58rem; letter-spacing:2px; color:rgba(0,245,255,.7); min-width:52px; }
+.g-key { font-size:.58rem; letter-spacing:2px; color:rgba(0,245,255,.7); min-width:56px; }
 .g-desc { font-size:.58rem; letter-spacing:1px; color:rgba(255,255,255,.3); }
 
-/* ── SELECTED INFO ── */
 #selInfo {
   position:fixed; top:72px; left:50%; transform:translateX(-50%);
   z-index:20; text-align:center; pointer-events:none;
@@ -118,7 +149,33 @@ body::before {
 }
 #selCoords { font-size:.55rem; letter-spacing:2px; color:rgba(255,0,144,.45); margin-top:3px; }
 
-/* ── PiP CAMERA ── */
+/* Throw indicator */
+#throwIndicator {
+  position:fixed; top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  z-index:25; pointer-events:none;
+  font-family:'Orbitron',sans-serif; font-size:1.4rem;
+  letter-spacing:6px; color:#aa44ff;
+  text-shadow:0 0 30px rgba(170,68,255,.8);
+  opacity:0; transition:opacity .15s;
+}
+#throwIndicator.show { opacity:1; animation:throwAnim .5s ease-out forwards; }
+@keyframes throwAnim {
+  0%  { opacity:1; transform:translate(-50%,-50%) scale(1); }
+  100%{ opacity:0; transform:translate(-50%,-80%) scale(1.4); }
+}
+
+/* Velocity HUD bar */
+#velBar {
+  position:fixed; top:70px; right:24px; z-index:20;
+  display:flex; flex-direction:column; gap:3px;
+  opacity:0; transition:opacity .3s;
+}
+#velBar.show { opacity:1; }
+.vel-lbl { font-size:.5rem; letter-spacing:2px; color:rgba(170,68,255,.5); }
+.vel-track { width:80px; height:3px; background:rgba(170,68,255,.15); border-radius:2px; overflow:hidden; }
+.vel-fill { height:100%; width:0%; background:linear-gradient(to right,#7fff00,#aa44ff); border-radius:2px; transition:width .1s; }
+
 #pip {
   position:fixed; bottom:24px; right:24px; z-index:20;
   width:220px; border-radius:8px; overflow:hidden;
@@ -135,7 +192,6 @@ body::before {
 .pip-dot { width:6px; height:6px; border-radius:50%; background:#444; transition:background .3s; }
 .pip-dot.live { background:#7fff00; box-shadow:0 0 6px #7fff00; }
 
-/* ── LOADING ── */
 #loading {
   position:fixed; inset:0; z-index:200;
   background:#000310; display:flex; flex-direction:column;
@@ -163,7 +219,6 @@ body::before {
 @keyframes ld { 0%{width:0%} 100%{width:100%} }
 .ld-msg { font-size:.6rem; letter-spacing:2px; color:rgba(0,245,255,.3); }
 
-/* ── Custom cursor ── */
 #cursor {
   position:fixed; z-index:50; pointer-events:none;
   width:20px; height:20px;
@@ -179,55 +234,65 @@ body::before {
 </head>
 <body>
 
-<!-- Three.js -->
 <canvas id="threeCanvas"></canvas>
-<!-- Hand skeleton overlay -->
 <canvas id="handCanvas"></canvas>
-<!-- Hidden video -->
 <video id="video" style="display:none" playsinline autoplay muted></video>
 
-<!-- Custom cursor -->
 <div id="cursor"></div>
 
-<!-- Corner brackets -->
 <div class="brkt tl"></div><div class="brkt tr"></div>
 <div class="brkt bl"></div><div class="brkt br"></div>
 
-<!-- HUD -->
 <div id="hud">
   <div class="hud-logo">HOLO<em>HAND</em></div>
   <div class="hud-right" id="hudInfo">GESTURE: IDLE &nbsp;|&nbsp; FPS: —<br>HAND: <span>SCANNING…</span></div>
 </div>
 
-<!-- Selected object info -->
+<!-- Throw flash -->
+<div id="throwIndicator">⚡ THROW!</div>
+
+<!-- Velocity bar -->
+<div id="velBar">
+  <div class="vel-lbl">VELOCITY</div>
+  <div class="vel-track"><div class="vel-fill" id="velFill"></div></div>
+</div>
+
 <div id="selInfo"><div id="selName">—</div><div id="selCoords">X: 0.00 · Y: 0.00 · Z: 0.00</div></div>
 
-<!-- Left panel: object list -->
+<!-- Left panel -->
 <div id="leftPanel">
-  <div class="panel-lbl">// OBJECTS</div>
+  <div class="panel-lbl">// 3D OBJECTS</div>
   <button class="obj-btn active" onclick="selectObj(0)">◈ CUBE</button>
   <button class="obj-btn" onclick="selectObj(1)">◉ SPHERE</button>
   <button class="obj-btn" onclick="selectObj(2)">◎ TORUS</button>
   <button class="obj-btn" onclick="selectObj(3)">◆ CRYSTAL</button>
   <button class="obj-btn" onclick="selectObj(4)">✺ KNOT</button>
   <button class="obj-btn" onclick="selectObj(5)">⬡ GEM</button>
+
   <div class="divider"></div>
-  <button class="reset-btn" onclick="resetSelected()">↺ RESET</button>
+  <div class="panel-lbl img-lbl">// IMAGE BLOCKS</div>
+  <button class="img-btn" onclick="selectObj(6)">🖼 IMG·ALPHA</button>
+  <button class="img-btn" onclick="selectObj(7)">🖼 IMG·BETA</button>
+  <button class="img-btn" onclick="selectObj(8)">🖼 IMG·GAMMA</button>
+  <button class="img-btn" onclick="selectObj(9)">🖼 IMG·DELTA</button>
+
+  <div class="divider"></div>
+  <button class="reset-btn" onclick="resetSelected()">↺ RESET SELECTED</button>
+  <button class="reset-all-btn" onclick="resetAll()">⟳ RESET ALL BLOCKS</button>
 </div>
 
 <!-- Gesture guide -->
 <div id="guide">
   <div class="guide-row"><span class="g-ico">☝️</span><span class="g-key">POINT</span><span class="g-desc">— Chọn vật thể</span></div>
-  <div class="guide-row"><span class="g-ico">✊</span><span class="g-key">FIST</span><span class="g-desc">— Di chuyển XY</span></div>
+  <div class="guide-row"><span class="g-ico">✊</span><span class="g-key">FIST</span><span class="g-desc">— Cầm &amp; di chuyển</span></div>
+  <div class="guide-row"><span class="g-ico">🤲</span><span class="g-key">RELEASE</span><span class="g-desc">— Thả = NÉM!</span></div>
   <div class="guide-row"><span class="g-ico">✌️</span><span class="g-key">V-SIGN</span><span class="g-desc">— Xoay vật thể</span></div>
   <div class="guide-row"><span class="g-ico">🤏</span><span class="g-key">PINCH</span><span class="g-desc">— Phóng to/thu nhỏ</span></div>
   <div class="guide-row"><span class="g-ico">🖐️</span><span class="g-key">OPEN</span><span class="g-desc">— Thả / nghỉ</span></div>
 </div>
 
-<!-- Badge -->
 <div id="badge">⬛ IDLE — Giơ tay vào camera</div>
 
-<!-- PiP -->
 <div id="pip">
   <canvas id="pipCanvas"></canvas>
   <div class="pip-footer">
@@ -236,17 +301,14 @@ body::before {
   </div>
 </div>
 
-<!-- Loading -->
 <div id="loading">
   <div class="ld-title">HOLOHAND</div>
-  <div class="ld-sub">3D GESTURE CONTROL SYSTEM</div>
+  <div class="ld-sub">3D GESTURE CONTROL SYSTEM v2</div>
   <div class="ld-bar"><div class="ld-inner"></div></div>
   <div class="ld-msg" id="ldMsg">LOADING MODELS…</div>
 </div>
 
-<!-- Three.js r128 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<!-- MediaPipe -->
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
@@ -276,11 +338,9 @@ camera.lookAt(0, 1, 0);
 
 // ── Lights ──
 scene.add(new THREE.AmbientLight(0x000a20, 3));
-
 const mkLight = (hex, x, y, z, intensity, dist) => {
   const l = new THREE.PointLight(hex, intensity, dist);
-  l.position.set(x, y, z);
-  scene.add(l); return l;
+  l.position.set(x, y, z); scene.add(l); return l;
 };
 const L1 = mkLight(0x00f5ff, -6, 6, 6, 4, 25);
 const L2 = mkLight(0xff0090, 6, 6, 6, 4, 25);
@@ -301,11 +361,12 @@ const L4 = mkLight(0xffaa00, 0, 2, 8, 1, 15);
 // ── Grid floor ──
 const grid = new THREE.GridHelper(40, 40, 0x00f5ff, 0x001530);
 grid.position.y = -0.5;
-grid.material.opacity = .45;
-grid.material.transparent = true;
+grid.material.opacity = .45; grid.material.transparent = true;
 scene.add(grid);
 
-// ── OBJECTS ──
+// ════════════════════════════════════════════════════════
+//  3D OBJECTS (indices 0–5)
+// ════════════════════════════════════════════════════════
 const OBJ_NAMES   = ['CUBE','SPHERE','TORUS','CRYSTAL','KNOT','GEM'];
 const OBJ_COLORS  = [0x00f5ff, 0xff0090, 0x7fff00, 0xffaa00, 0xaa44ff, 0x00ffcc];
 const OBJ_GEOS    = [
@@ -327,10 +388,8 @@ OBJ_GEOS.forEach((geo, i) => {
   const group = new THREE.Group();
   const [x, y, z] = OBJ_POSITIONS[i];
   group.position.set(x, y, z);
-
   const col = OBJ_COLORS[i];
 
-  // Solid holographic body
   const mat = new THREE.MeshPhongMaterial({
     color: col, emissive: col, emissiveIntensity: .12,
     transparent: true, opacity: .72, shininess: 120,
@@ -339,54 +398,193 @@ OBJ_GEOS.forEach((geo, i) => {
   mesh.castShadow = true;
   group.add(mesh);
 
-  // Inner glow layer
-  const innerMat = new THREE.MeshBasicMaterial({
-    color: col, transparent: true, opacity: .06, side: THREE.BackSide
-  });
+  const innerMat = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: .06, side: THREE.BackSide });
   const inner = new THREE.Mesh(geo, innerMat);
-  inner.scale.setScalar(1.15);
-  group.add(inner);
+  inner.scale.setScalar(1.15); group.add(inner);
 
-  // Wireframe
   const wMat = new THREE.MeshBasicMaterial({ color: col, wireframe: true, transparent: true, opacity: .28 });
   const wire = new THREE.Mesh(geo, wMat);
-  wire.scale.setScalar(1.03);
-  group.add(wire);
+  wire.scale.setScalar(1.03); group.add(wire);
 
-  // Selection orbit ring
   const ringGeo = new THREE.TorusGeometry(1.3, .03, 8, 64);
   const ringMat = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0 });
   const ring = new THREE.Mesh(ringGeo, ringMat);
-  ring.rotation.x = Math.PI / 2;
-  ring.position.y = -0.9;
-  group.add(ring);
+  ring.rotation.x = Math.PI / 2; ring.position.y = -0.9; group.add(ring);
 
-  // Ground glow
   const glowGeo = new THREE.CircleGeometry(.9, 32);
   const glowMat = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: .07 });
   const glow = new THREE.Mesh(glowGeo, glowMat);
-  glow.rotation.x = -Math.PI / 2;
-  glow.position.y = -0.48;
-  group.add(glow);
+  glow.rotation.x = -Math.PI / 2; glow.position.y = -0.48; group.add(glow);
 
   scene.add(group);
 
   OBJS.push({
     group, mesh, wire, inner, ring, ringMat, mat, wMat,
-    color: col, name: OBJ_NAMES[i],
+    color: col, name: OBJ_NAMES[i], isImage: false,
     basePos: new THREE.Vector3(x, y, z),
     floatPhase: Math.random() * Math.PI * 2,
-    selected: false,
-    hovered: false,
+    selected: false, hovered: false,
     targetPos: new THREE.Vector3(x, y, z),
     targetScale: 1,
+    // throw physics
+    velocity: new THREE.Vector3(0, 0, 0),
+    isThrown: false,
   });
 });
 
-// ── Raycaster ──
-const raycaster = new THREE.Raycaster();
+// ════════════════════════════════════════════════════════
+//  IMAGE PANEL OBJECTS (indices 6–9)
+// ════════════════════════════════════════════════════════
 
-// ── 3D Cursor ──
+// Generate a vivid canvas texture as fallback / decoration
+function makeCanvasTex(label, colHex, seed) {
+  const c = document.createElement('canvas');
+  c.width = 480; c.height = 320;
+  const ctx = c.getContext('2d');
+
+  // Dark holographic background
+  const grad = ctx.createLinearGradient(0, 0, 480, 320);
+  grad.addColorStop(0, '#000310');
+  grad.addColorStop(1, '#001020');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 480, 320);
+
+  // Grid lines
+  ctx.strokeStyle = colHex + '22';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < 480; x += 32) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,320); ctx.stroke(); }
+  for (let y = 0; y < 320; y += 32) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(480,y); ctx.stroke(); }
+
+  // Decorative circles
+  for (let k = 0; k < 5; k++) {
+    const r = 20 + (seed * (k+1) * 37) % 80;
+    const cx2 = (seed * (k+3) * 53 + 60) % 400 + 40;
+    const cy2 = (seed * (k+7) * 71 + 30) % 260 + 30;
+    ctx.beginPath(); ctx.arc(cx2, cy2, r, 0, Math.PI*2);
+    ctx.strokeStyle = colHex + '40'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.strokeStyle = colHex + '15'; ctx.lineWidth = 8; ctx.stroke();
+  }
+
+  // Center glow
+  const cg = ctx.createRadialGradient(240, 160, 10, 240, 160, 150);
+  cg.addColorStop(0, colHex + '20');
+  cg.addColorStop(1, 'transparent');
+  ctx.fillStyle = cg; ctx.fillRect(0, 0, 480, 320);
+
+  // Border
+  ctx.strokeStyle = colHex + 'aa'; ctx.lineWidth = 2;
+  ctx.strokeRect(4, 4, 472, 312);
+  ctx.strokeStyle = colHex + '33'; ctx.lineWidth = 8;
+  ctx.strokeRect(4, 4, 472, 312);
+
+  // Corner marks
+  const cm = 20;
+  ctx.strokeStyle = colHex; ctx.lineWidth = 3;
+  [[0,0],[1,0],[0,1],[1,1]].forEach(([fx, fy]) => {
+    const sx = fx ? 472 : 4, sy = fy ? 312 : 4;
+    const dx = fx ? -cm : cm, dy = fy ? -cm : cm;
+    ctx.beginPath(); ctx.moveTo(sx+dx, sy); ctx.lineTo(sx, sy); ctx.lineTo(sx, sy+dy); ctx.stroke();
+  });
+
+  // Label
+  ctx.fillStyle = colHex;
+  ctx.shadowColor = colHex; ctx.shadowBlur = 18;
+  ctx.font = 'bold 28px "Orbitron", monospace';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(label, 240, 148);
+
+  ctx.shadowBlur = 8;
+  ctx.font = '13px "Share Tech Mono", monospace';
+  ctx.fillStyle = colHex + 'bb';
+  ctx.fillText('DRAG · THROW · INTERACT', 240, 188);
+
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = colHex + '55';
+  ctx.font = '11px monospace';
+  ctx.fillText(`SYS_ID: ${(seed * 0x3f7).toString(16).toUpperCase().padStart(6,'0')}`, 240, 216);
+
+  const tex = new THREE.CanvasTexture(c);
+  return tex;
+}
+
+const IMG_DATA = [
+  { name:'IMG·ALPHA', label:'ALPHA', col:0x00f5ff, colHex:'#00f5ff', seed:1, pos:[-3.5, 3.4, -0.5], url:'https://picsum.photos/seed/alpha77/480/320' },
+  { name:'IMG·BETA',  label:'BETA',  col:0xff0090, colHex:'#ff0090', seed:2, pos:[0,    3.4,  0.5], url:'https://picsum.photos/seed/beta88/480/320'  },
+  { name:'IMG·GAMMA', label:'GAMMA', col:0x7fff00, colHex:'#7fff00', seed:3, pos:[3.5,  3.4, -0.5], url:'https://picsum.photos/seed/gamma99/480/320' },
+  { name:'IMG·DELTA', label:'DELTA', col:0xffaa00, colHex:'#ffaa00', seed:4, pos:[0,    3.4, -3.0], url:'https://picsum.photos/seed/delta55/480/320' },
+];
+
+const texLoader = new THREE.TextureLoader();
+texLoader.crossOrigin = 'anonymous';
+
+IMG_DATA.forEach((d, i) => {
+  const group = new THREE.Group();
+  const [x, y, z] = d.pos;
+  group.position.set(x, y, z);
+
+  // Outer glow frame
+  const frameGeo = new THREE.PlaneGeometry(2.75, 2.05);
+  const frameMat = new THREE.MeshBasicMaterial({
+    color: d.col, transparent: true, opacity: .18, side: THREE.DoubleSide
+  });
+  const frame = new THREE.Mesh(frameGeo, frameMat);
+  frame.position.z = -0.02;
+  group.add(frame);
+
+  // Border edge lines (4 thin edge bars)
+  const borderMat = new THREE.MeshBasicMaterial({ color: d.col, transparent: true, opacity: .65 });
+  [[2.75, .03, 0, 1.025, 0],[2.75, .03, 0, -1.025, 0],[.03, 2.05, 0.03, 0, 1],[.03, 2.05, -0.03, 0, -1]].forEach(([w, h, bz, by, bx]) => {
+    const bg = new THREE.PlaneGeometry(w < h ? w : w, w < h ? h : h);
+    const bm = new THREE.Mesh(new THREE.BoxGeometry(w, h, .02), borderMat.clone());
+    bm.position.set(bx * 1.36, by * 1.02, bz);
+    group.add(bm);
+  });
+
+  // Canvas fallback texture (shown immediately)
+  const fallbackTex = makeCanvasTex(d.label, d.colHex, d.seed);
+
+  const planeMat = new THREE.MeshBasicMaterial({
+    map: fallbackTex,
+    side: THREE.DoubleSide,
+    transparent: true, opacity: .92,
+  });
+  const planeGeo = new THREE.PlaneGeometry(2.5, 1.88);
+  const plane = new THREE.Mesh(planeGeo, planeMat);
+  group.add(plane);
+
+  // Try loading real image (progressive enhancement)
+  texLoader.load(d.url, (tex) => {
+    tex.minFilter = THREE.LinearFilter;
+    planeMat.map = tex;
+    planeMat.needsUpdate = true;
+  });
+
+  // Selection ring (circular)
+  const ringGeo2 = new THREE.TorusGeometry(1.5, .025, 8, 80);
+  const ringMat2 = new THREE.MeshBasicMaterial({ color: d.col, transparent: true, opacity: 0 });
+  const ring2 = new THREE.Mesh(ringGeo2, ringMat2);
+  ring2.rotation.x = Math.PI * 0.08;
+  group.add(ring2);
+
+  scene.add(group);
+
+  OBJS.push({
+    group, mesh: plane, mat: planeMat, frameMat, frame,
+    ring: ring2, ringMat: ringMat2,
+    wMat: frameMat, wire: frame,
+    color: d.col, name: d.name, isImage: true,
+    basePos: new THREE.Vector3(x, y, z),
+    floatPhase: Math.random() * Math.PI * 2,
+    selected: false, hovered: false,
+    targetPos: new THREE.Vector3(x, y, z),
+    targetScale: 1,
+    velocity: new THREE.Vector3(0, 0, 0),
+    isThrown: false,
+  });
+});
+
+// ── Raycaster & 3D cursor ──
+const raycaster = new THREE.Raycaster();
 const curGeo = new THREE.SphereGeometry(.06, 12, 12);
 const curMat = new THREE.MeshBasicMaterial({ color: 0x00f5ff, transparent: true, opacity: 0 });
 const cursor3D = new THREE.Mesh(curGeo, curMat);
@@ -397,7 +595,6 @@ const pulseMat = new THREE.MeshBasicMaterial({ color: 0x00f5ff, transparent: tru
 const pulseRing = new THREE.Mesh(pulseGeo, pulseMat);
 scene.add(pulseRing);
 
-// ── Spotlight on selected ──
 const spotlight = new THREE.SpotLight(0xffffff, 0, 20, Math.PI / 8, .4, 2);
 spotlight.position.set(0, 10, 0);
 scene.add(spotlight);
@@ -410,35 +607,52 @@ let selectedIdx = 0;
 let T = 0;
 let handVis = false;
 let gesture = 'IDLE';
+let prevGesture = 'IDLE';
+
+// Grab state
 let lastHX = null, lastHY = null, lastHAngle = null, lastPY = null;
+// Velocity tracking (rolling avg of last N deltas)
+const VEL_HISTORY = 5;
+let velHistX = [], velHistY = [];
+let lastGrabVelX = 0, lastGrabVelY = 0;
+
 let hoverIdx = -1, hoverTimer = null;
 let frameN = 0, lastFpsT = performance.now(), fpsVal = 0;
+
+const FRICTION = 0.91;       // velocity decay per frame
+const THROW_SCALE = 22;      // how much of the hand velocity transfers to throw
+const BOUNDS = { x: 9, y: 7, z: 5 }; // soft world bounds
 
 // ════════════════════════════════════════════════════════
 //  OBJECT MANAGEMENT
 // ════════════════════════════════════════════════════════
 function selectObj(i) {
-  // Deselect old
   if (selectedIdx >= 0) {
     const o = OBJS[selectedIdx];
     o.selected = false;
-    o.ringMat.opacity = 0;
-    o.mat.emissiveIntensity = .12;
-    o.wMat.opacity = .28;
+    if (o.ringMat) o.ringMat.opacity = 0;
+    if (!o.isImage) { o.mat.emissiveIntensity = .12; o.wMat.opacity = .28; }
+    else { o.frameMat.opacity = .18; }
   }
   selectedIdx = i;
   const o = OBJS[i];
   o.selected = true;
-  o.ringMat.opacity = .85;
-  o.mat.emissiveIntensity = .5;
-  o.wMat.opacity = .65;
+  if (o.ringMat) o.ringMat.opacity = .85;
+  if (!o.isImage) { o.mat.emissiveIntensity = .5; o.wMat.opacity = .65; }
+  else { o.frameMat.opacity = .45; }
 
-  document.querySelectorAll('.obj-btn').forEach((b, j) => b.classList.toggle('active', j === i));
+  document.querySelectorAll('.obj-btn,.img-btn').forEach((b, j) => {
+    b.classList.remove('active');
+  });
+  const allBtns = document.querySelectorAll('.obj-btn,.img-btn');
+  if (allBtns[i]) allBtns[i].classList.add('active');
+
   document.getElementById('selInfo').classList.add('show');
   const hex = '#' + o.color.toString(16).padStart(6,'0');
   document.getElementById('selName').style.color = hex;
   document.getElementById('selName').textContent = o.name;
   document.getElementById('selName').style.textShadow = `0 0 20px ${hex}80`;
+  document.getElementById('selCoords').style.color = hex + '88';
 }
 
 function resetSelected() {
@@ -446,7 +660,43 @@ function resetSelected() {
   const o = OBJS[selectedIdx];
   o.targetPos.copy(o.basePos);
   o.targetScale = 1;
+  o.velocity.set(0, 0, 0);
+  o.isThrown = false;
   o.group.rotation.set(0, 0, 0);
+}
+
+function resetAll() {
+  OBJS.forEach(o => {
+    o.targetPos.copy(o.basePos);
+    o.targetScale = 1;
+    o.velocity.set(0, 0, 0);
+    o.isThrown = false;
+    o.group.rotation.set(0, 0, 0);
+  });
+  // Flash effect
+  flashResetAll();
+}
+
+function flashResetAll() {
+  // Brief white flash on all object rings
+  OBJS.forEach(o => {
+    if (o.ringMat && o.selected) return;
+    if (o.ringMat) {
+      const orig = o.ringMat.opacity;
+      o.ringMat.opacity = .9;
+      setTimeout(() => { o.ringMat.opacity = orig; }, 300);
+    }
+  });
+  // Badge flash
+  const badge = document.getElementById('badge');
+  const origClass = badge.className;
+  badge.textContent = '⟳ ALL RESET — Đã khôi phục tất cả';
+  badge.id = 'badge'; badge.className = 'rot';
+  setTimeout(() => {
+    badge.textContent = BADGE_MAP[gesture]?.t || BADGE_MAP.IDLE.t;
+    badge.className = BADGE_MAP[gesture]?.cls || '';
+    badge.id = 'badge';
+  }, 1200);
 }
 
 selectObj(0);
@@ -455,60 +705,78 @@ selectObj(0);
 //  GESTURE DETECTION
 // ════════════════════════════════════════════════════════
 function d3(a, b) {
-  return Math.sqrt((a.x-b.x)**2 + (a.y-b.y)**2 + (a.z-b.z)**2);
+  return Math.sqrt((a.x-b.x)**2+(a.y-b.y)**2+(a.z-b.z)**2);
 }
 
 function classifyGesture(lm) {
   if (!lm || lm.length < 21) return null;
-
   const indexUp  = lm[8].y  < lm[6].y;
   const middleUp = lm[12].y < lm[10].y;
   const ringUp   = lm[16].y < lm[14].y;
   const pinkyUp  = lm[20].y < lm[18].y;
-
   const pinchD   = d3(lm[4], lm[8]);
   const pinching = pinchD < .075;
-
-  const cx = (lm[0].x + lm[5].x + lm[9].x + lm[13].x + lm[17].x) / 5;
-  const cy = (lm[0].y + lm[5].y + lm[9].y + lm[13].y + lm[17].y) / 5;
   const dx = lm[9].x - lm[0].x, dy = lm[9].y - lm[0].y;
   const angle  = Math.atan2(dy, dx);
   const tiltZ  = lm[9].z - lm[0].z;
-
   const isFist  = !indexUp && !middleUp && !ringUp && !pinkyUp;
   const isV     = indexUp && middleUp && !ringUp && !pinkyUp && !pinching;
   const isPoint = indexUp && !middleUp && !ringUp && !pinkyUp && !pinching;
   const isOpen  = indexUp && middleUp && ringUp && pinkyUp;
-
+  const cx = lm[9].x; const cy = lm[9].y;
   let g = 'IDLE';
   if (pinching) g = 'PINCH';
   else if (isFist)  g = 'GRAB';
   else if (isV)     g = 'ROTATE';
   else if (isPoint) g = 'SELECT';
   else if (isOpen)  g = 'OPEN';
-
   return { g, cx, cy, angle, tiltZ, pinchD, indexTip: lm[8] };
 }
 
 // ════════════════════════════════════════════════════════
-//  APPLY GESTURE → 3D CONTROL
+//  APPLY GESTURE → CONTROL
 // ════════════════════════════════════════════════════════
 const BADGE_MAP = {
-  IDLE:   { t: '⬛ IDLE — Giơ tay vào camera',     cls: '' },
-  SELECT: { t: '☝️ POINT — Chỉ để chọn vật thể',  cls: '' },
-  GRAB:   { t: '✊ GRAB — Di chuyển vật thể XY',   cls: 'grab' },
-  ROTATE: { t: '✌️ V-SIGN — Xoay vật thể',         cls: 'rot' },
-  PINCH:  { t: '🤏 PINCH — Phóng to / Thu nhỏ',   cls: 'pinch' },
-  OPEN:   { t: '🖐️ OPEN — Thả tay',                cls: '' },
+  IDLE:   { t:'⬛ IDLE — Giơ tay vào camera',        cls:'' },
+  SELECT: { t:'☝️ POINT — Chỉ để chọn vật thể',     cls:'' },
+  GRAB:   { t:'✊ GRAB — Di chuyển / Cầm để NÉM!',   cls:'grab' },
+  ROTATE: { t:'✌️ V-SIGN — Xoay vật thể',            cls:'rot' },
+  PINCH:  { t:'🤏 PINCH — Phóng to / Thu nhỏ',      cls:'pinch' },
+  OPEN:   { t:'🖐️ OPEN — Thả tay',                   cls:'' },
+  THROW:  { t:'🚀 NÉM! — Vật thể được phóng!',      cls:'throw' },
 };
 
+function triggerThrowFX(speed) {
+  const el = document.getElementById('throwIndicator');
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 500);
+  updateBadge('THROW');
+  setTimeout(() => updateBadge(gesture), 700);
+}
+
 function applyGesture(data) {
-  if (!data) { updateBadge('IDLE'); return; }
+  if (!data) {
+    // Hand lost — if was grabbing, throw!
+    if (prevGesture === 'GRAB') triggerThrow();
+    prevGesture = 'IDLE';
+    updateBadge('IDLE');
+    velHistX = []; velHistY = [];
+    return;
+  }
+
   const { g, cx, cy, angle, tiltZ, indexTip } = data;
+
+  // Detect GRAB → release = THROW
+  if (prevGesture === 'GRAB' && g !== 'GRAB') {
+    triggerThrow();
+  }
+  prevGesture = g;
   gesture = g;
   updateBadge(g);
 
-  // Update 3D cursor position
+  // Update 3D cursor
   const ndcX = 1 - cx * 2;
   const ndcY = 1 - cy * 2;
   raycaster.setFromCamera(new THREE.Vector2(ndcX, ndcY), camera);
@@ -521,52 +789,68 @@ function applyGesture(data) {
     pulseRing.lookAt(camera.position);
   }
 
-  // Cursor color by gesture
   const gcols = { GRAB:0xff0090, ROTATE:0x7fff00, PINCH:0xffaa00, SELECT:0x00f5ff, OPEN:0x00f5ff, IDLE:0x00f5ff };
   curMat.color.setHex(gcols[g] || 0x00f5ff);
   pulseMat.color.setHex(gcols[g] || 0x00f5ff);
 
   const o = OBJS[selectedIdx];
 
-  // ── SELECT / hover ──
+  // ── SELECT ──
   if (g === 'SELECT') {
     const tipNDC = new THREE.Vector2(1 - indexTip.x * 2, 1 - indexTip.y * 2);
     raycaster.setFromCamera(tipNDC, camera);
     const meshes = OBJS.map(ob => ob.mesh);
     const hits = raycaster.intersectObjects(meshes);
-
-    // Reset hover glow
-    OBJS.forEach((ob, j) => { if (!ob.selected) ob.mat.emissiveIntensity = .12; });
-
+    OBJS.forEach((ob) => { if (!ob.selected && !ob.isImage) ob.mat.emissiveIntensity = .12; });
     if (hits.length > 0) {
       const hi = meshes.indexOf(hits[0].object);
       if (hi >= 0) {
-        OBJS[hi].mat.emissiveIntensity = .55;
+        if (!OBJS[hi].isImage) OBJS[hi].mat.emissiveIntensity = .55;
         if (hi !== hoverIdx) {
-          hoverIdx = hi;
-          clearTimeout(hoverTimer);
+          hoverIdx = hi; clearTimeout(hoverTimer);
           hoverTimer = setTimeout(() => { if (hoverIdx === hi) selectObj(hi); }, 700);
         }
       }
-    } else {
-      clearTimeout(hoverTimer); hoverIdx = -1;
-    }
+    } else { clearTimeout(hoverTimer); hoverIdx = -1; }
     lastHX = null; lastHY = null; lastHAngle = null; lastPY = null;
+    velHistX = []; velHistY = [];
     return;
   }
 
-  // ── GRAB → move XY ──
+  // ── GRAB → move + track velocity ──
   if (g === 'GRAB') {
+    o.isThrown = false; // cancel any ongoing throw
+    o.velocity.set(0,0,0);
     if (lastHX !== null) {
+      const dx = -(cx - lastHX) * 14;
+      const dy = -(cy - lastHY) * 9;
       o.targetPos.x -= (cx - lastHX) * 14;
       o.targetPos.y -= (cy - lastHY) * 9;
+
+      // Clamp to bounds
+      o.targetPos.x = Math.max(-BOUNDS.x, Math.min(BOUNDS.x, o.targetPos.x));
+      o.targetPos.y = Math.max(-0.3, Math.min(BOUNDS.y, o.targetPos.y));
+
+      // Rolling velocity history
+      velHistX.push(dx); velHistY.push(dy);
+      if (velHistX.length > VEL_HISTORY) { velHistX.shift(); velHistY.shift(); }
+      lastGrabVelX = velHistX.reduce((a,b)=>a+b,0) / velHistX.length;
+      lastGrabVelY = velHistY.reduce((a,b)=>a+b,0) / velHistY.length;
+
+      // Show velocity bar
+      const spd = Math.sqrt(lastGrabVelX**2 + lastGrabVelY**2);
+      const velPct = Math.min(100, spd * 5);
+      document.getElementById('velFill').style.width = velPct + '%';
+      document.getElementById('velBar').classList.add('show');
     }
     lastHX = cx; lastHY = cy;
     lastHAngle = null; lastPY = null;
     return;
   }
 
-  // ── ROTATE → wrist angle ──
+  document.getElementById('velBar').classList.remove('show');
+
+  // ── ROTATE ──
   if (g === 'ROTATE') {
     if (lastHAngle !== null) {
       let delta = angle - lastHAngle;
@@ -577,22 +861,53 @@ function applyGesture(data) {
     }
     lastHAngle = angle;
     lastHX = null; lastHY = null; lastPY = null;
+    velHistX = []; velHistY = [];
     return;
   }
 
-  // ── PINCH → scale (hand Y controls scale) ──
+  // ── PINCH → scale ──
   if (g === 'PINCH') {
     if (lastPY !== null) {
-      const dy = cy - lastPY;
-      const factor = 1 - dy * 7;
+      const dy2 = cy - lastPY;
+      const factor = 1 - dy2 * 7;
       o.targetScale = Math.max(.08, Math.min(4.5, o.targetScale * factor));
     }
     lastPY = cy;
     lastHX = null; lastHY = null; lastHAngle = null;
+    velHistX = []; velHistY = [];
     return;
   }
 
   lastHX = null; lastHY = null; lastHAngle = null; lastPY = null;
+  velHistX = []; velHistY = [];
+}
+
+// ── Throw on release ──
+function triggerThrow() {
+  document.getElementById('velBar').classList.remove('show');
+  const speed = Math.sqrt(lastGrabVelX**2 + lastGrabVelY**2);
+  if (speed < 0.05) { lastGrabVelX = 0; lastGrabVelY = 0; return; }
+
+  const o = OBJS[selectedIdx];
+  // Convert 2D hand velocity → 3D world velocity
+  o.velocity.set(
+    lastGrabVelX * THROW_SCALE * 0.08,
+    lastGrabVelY * THROW_SCALE * -0.06,
+    0
+  );
+  o.isThrown = true;
+  triggerThrowFX(speed);
+
+  // Add spin on throw for 3D objects
+  if (!o.isImage) {
+    const spinX = (lastGrabVelY * 0.3);
+    const spinY = (lastGrabVelX * 0.3);
+    o._throwSpinX = spinX;
+    o._throwSpinY = spinY;
+  }
+
+  lastGrabVelX = 0; lastGrabVelY = 0;
+  velHistX = []; velHistY = [];
 }
 
 function updateBadge(g) {
@@ -604,7 +919,7 @@ function updateBadge(g) {
 }
 
 // ════════════════════════════════════════════════════════
-//  HAND CANVAS DRAWING
+//  HAND CANVAS
 // ════════════════════════════════════════════════════════
 const handCanvas = document.getElementById('handCanvas');
 const hctx = handCanvas.getContext('2d');
@@ -627,52 +942,32 @@ const TIP_COLORS = [
 ];
 
 function drawSkeleton(ctx, lm, W, H, pip) {
-  const s = pip ? 1 : .25;  // opacity scale
   ctx.shadowBlur = pip ? 6 : 14;
-
-  // Connections
   ctx.lineWidth = pip ? 1.5 : 1.2;
   CONNECTIONS.forEach(([a, b]) => {
-    ctx.beginPath();
-    ctx.moveTo(lm[a].x, lm[a].y);
-    ctx.lineTo(lm[b].x, lm[b].y);
+    ctx.beginPath(); ctx.moveTo(lm[a].x, lm[a].y); ctx.lineTo(lm[b].x, lm[b].y);
     ctx.strokeStyle = `rgba(0,245,255,${pip?.8:.22})`;
-    ctx.shadowColor = '#00f5ff';
-    ctx.stroke();
+    ctx.shadowColor = '#00f5ff'; ctx.stroke();
   });
-
-  // Joints
   lm.forEach((p, i) => {
     const r = i === 0 ? (pip ? 5 : 6) : (pip ? 3 : 5);
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+    ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
     ctx.fillStyle = TIP_COLORS[i] || '#fff';
-    ctx.shadowColor = TIP_COLORS[i] || '#fff';
-    ctx.fill();
+    ctx.shadowColor = TIP_COLORS[i] || '#fff'; ctx.fill();
   });
   ctx.shadowBlur = 0;
 }
 
 // ════════════════════════════════════════════════════════
-//  MEDIAPIPE SETUP
+//  MEDIAPIPE
 // ════════════════════════════════════════════════════════
 const video = document.getElementById('video');
-
-const mp_hands = new Hands({
-  locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`
-});
-mp_hands.setOptions({
-  maxNumHands: 1,
-  modelComplexity: 1,
-  minDetectionConfidence: .7,
-  minTrackingConfidence: .65,
-});
+const mp_hands = new Hands({ locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}` });
+mp_hands.setOptions({ maxNumHands:1, modelComplexity:1, minDetectionConfidence:.7, minTrackingConfidence:.65 });
 
 mp_hands.onResults(results => {
   const lmArr = results.multiHandLandmarks;
   handVis = lmArr && lmArr.length > 0;
-
-  // Draw PiP
   const vw = video.videoWidth || 320, vh = video.videoHeight || 240;
   const pw = 220, ph = Math.round(pw * vh / vw);
   pipCanvas.width = pw; pipCanvas.height = ph;
@@ -682,17 +977,13 @@ mp_hands.onResults(results => {
 
   if (lmArr && lmArr.length > 0) {
     const lm = lmArr[0];
-    // Scale to PiP (mirrored)
     const sLM = lm.map(p => ({ x:(1-p.x)*pw, y:p.y*ph, z:p.z }));
     drawSkeleton(pctx, sLM, pw, ph, true);
-
-    // Scale to fullscreen (mirrored)
     handCanvas.width  = window.innerWidth;
     handCanvas.height = window.innerHeight;
     hctx.clearRect(0, 0, handCanvas.width, handCanvas.height);
     const fLM = lm.map(p => ({ x:(1-p.x)*window.innerWidth, y:p.y*window.innerHeight, z:p.z }));
     drawSkeleton(hctx, fLM, window.innerWidth, window.innerHeight, false);
-
     applyGesture(classifyGesture(lm));
   } else {
     hctx.clearRect(0, 0, handCanvas.width, handCanvas.height);
@@ -703,7 +994,6 @@ mp_hands.onResults(results => {
   document.getElementById('pipLabel').textContent = handVis ? 'HAND DETECTED' : 'SCANNING…';
 });
 
-// Start camera
 function startHandTracking() {
   document.getElementById('ldMsg').textContent = 'ACCESSING CAMERA…';
   const mp_cam = new Camera(video, {
@@ -715,7 +1005,7 @@ function startHandTracking() {
   if (p && p.then) p.then(hide).catch(hide);
   else setTimeout(hide, 1500);
 }
-setTimeout(startHandTracking, 2600); // after load bar animation
+setTimeout(startHandTracking, 2600);
 
 // ════════════════════════════════════════════════════════
 //  ANIMATION LOOP
@@ -724,59 +1014,125 @@ function animate() {
   requestAnimationFrame(animate);
   T += .012;
 
-  // Animate lights
   L1.position.set(Math.sin(T*.6)*9, 6, Math.cos(T*.4)*9);
   L2.position.set(Math.cos(T*.5)*9, 6, Math.sin(T*.7)*9);
   L3.position.set(Math.sin(T*.3)*5, 10, -6 + Math.cos(T*.2)*3);
 
-  // Animate objects
   OBJS.forEach((o, i) => {
+    // ── Physics: thrown objects ──
+    if (o.isThrown && o.velocity.lengthSq() > 0.0001) {
+      o.targetPos.add(o.velocity);
+      o.velocity.multiplyScalar(FRICTION);
+
+      // Soft bounce on bounds
+      if (Math.abs(o.targetPos.x) > BOUNDS.x) {
+        o.velocity.x *= -0.6;
+        o.targetPos.x = Math.sign(o.targetPos.x) * BOUNDS.x;
+      }
+      if (o.targetPos.y < -0.3) {
+        o.velocity.y *= -0.5;
+        o.targetPos.y = -0.3;
+        o.velocity.x *= 0.85; // floor friction
+      }
+      if (o.targetPos.y > BOUNDS.y) {
+        o.velocity.y *= -0.6;
+        o.targetPos.y = BOUNDS.y;
+      }
+
+      // Spin during throw for 3D objects
+      if (!o.isImage && o._throwSpinX !== undefined) {
+        o.group.rotation.x += o._throwSpinX * Math.abs(o.velocity.x + o.velocity.y) * 0.5;
+        o.group.rotation.y += o._throwSpinY * Math.abs(o.velocity.x + o.velocity.y) * 0.5;
+        o._throwSpinX *= FRICTION;
+        o._throwSpinY *= FRICTION;
+      }
+      // Image panels tilt on throw
+      if (o.isImage) {
+        const tiltTarget = o.velocity.x * 0.15;
+        o.group.rotation.z += (tiltTarget - o.group.rotation.z) * 0.12;
+        o.group.rotation.x += (-o.velocity.y * 0.08 - o.group.rotation.x) * 0.08;
+      }
+
+      if (o.velocity.lengthSq() < 0.0001) {
+        o.velocity.set(0,0,0);
+        o.isThrown = false;
+        if (o.isImage) {
+          // Settle tilt back
+          o.group.rotation.z *= 0.9;
+          o.group.rotation.x *= 0.9;
+        }
+      }
+    }
+
     if (!o.selected) {
-      // Float
-      o.group.position.y = o.basePos.y + Math.sin(T + o.floatPhase) * .18;
-      // Slow spin
-      o.group.rotation.y += .007;
-      o.group.rotation.x += i % 2 === 0 ? .003 : -.003;
+      // Float idle
+      if (!o.isThrown) {
+        o.group.position.y = o.basePos.y + Math.sin(T + o.floatPhase) * .18;
+      }
+      if (!o.isImage && !o.isThrown) {
+        o.group.rotation.y += .007;
+        o.group.rotation.x += i % 2 === 0 ? .003 : -.003;
+      }
+      // Image panels: gentle float + very slow face-cam tilt
+      if (o.isImage && !o.isThrown) {
+        o.group.position.x = o.basePos.x + Math.sin(T * .5 + o.floatPhase) * .08;
+        // Slowly settle tilt
+        o.group.rotation.z *= 0.97;
+        o.group.rotation.x *= 0.97;
+      }
+      // Lerp position back if not thrown
+      if (!o.isThrown) {
+        o.group.position.x += (o.targetPos.x - o.group.position.x) * 0.1;
+        if (o.isImage) o.group.position.y += (o.targetPos.y - o.group.position.y) * 0.1;
+      } else {
+        o.group.position.x += (o.targetPos.x - o.group.position.x) * 0.2;
+        o.group.position.y += (o.targetPos.y - o.group.position.y) * 0.2;
+      }
     } else {
-      // Lerp to target
+      // Selected object
       o.group.position.lerp(o.targetPos, .12);
       const cs = o.group.scale.x;
       const ts = o.targetScale;
       o.group.scale.setScalar(cs + (ts - cs) * .12);
 
-      // Selection ring pulse
-      o.ring.rotation.z += .025;
-      o.ringMat.opacity = .5 + Math.sin(T * 4) * .35;
+      if (o.ringMat) {
+        o.ring.rotation.z += .025;
+        o.ringMat.opacity = .5 + Math.sin(T * 4) * .35;
+      }
 
-      // Spotlight follows
       spotlight.target.position.copy(o.group.position);
       spotlight.position.set(o.group.position.x, o.group.position.y + 8, o.group.position.z + 2);
       spotlight.intensity = 2 + Math.sin(T * 3) * .5;
       spotlight.color.setHex(o.color);
 
-      // Update coords
       const p = o.group.position;
       document.getElementById('selCoords').textContent =
-        `X: ${p.x.toFixed(2)} · Y: ${p.y.toFixed(2)} · Z: ${p.z.toFixed(2)} · S: ${o.group.scale.x.toFixed(2)}`;
+        `X:${p.x.toFixed(2)} · Y:${p.y.toFixed(2)} · Z:${p.z.toFixed(2)} · S:${o.group.scale.x.toFixed(2)}`;
+
+      // Image panel idle tilt back when selected
+      if (o.isImage && !o.isThrown) {
+        o.group.rotation.z *= 0.95;
+        o.group.rotation.x *= 0.95;
+      }
     }
 
-    // Hovered glow pulse
-    if (i === hoverIdx && !o.selected) {
+    if (i === hoverIdx && !o.selected && !o.isImage) {
       o.mat.emissiveIntensity = .4 + Math.sin(T * 6) * .2;
+    }
+    // Hover glow for image panels
+    if (i === hoverIdx && !o.selected && o.isImage) {
+      o.frameMat.opacity = .35 + Math.sin(T * 6) * .1;
     }
   });
 
-  // Cursor glow
   const cv = handVis ? (.55 + Math.sin(T * 6) * .2) : 0;
   curMat.opacity   = cv;
   pulseMat.opacity = cv * .5;
   const ps = 1 + Math.sin(T * 6) * .35;
   pulseRing.scale.setScalar(ps);
 
-  // Grid subtle pulse
   grid.material.opacity = .35 + Math.sin(T * .5) * .1;
 
-  // FPS
   frameN++;
   const now = performance.now();
   if (now - lastFpsT >= 1000) {
@@ -793,7 +1149,6 @@ function animate() {
 }
 animate();
 
-// ── Resize ──
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
@@ -802,18 +1157,17 @@ window.addEventListener('resize', () => {
   handCanvas.height = window.innerHeight;
 });
 
-// ── Custom cursor ──
 document.addEventListener('mousemove', e => {
   const c = document.getElementById('cursor');
   c.style.left = e.clientX + 'px';
   c.style.top  = e.clientY + 'px';
 });
 
-// ── Keyboard shortcuts ──
 document.addEventListener('keydown', e => {
   const k = e.key;
-  if (k >= '1' && k <= '6') selectObj(parseInt(k) - 1);
+  if (k >= '1' && k <= '9') selectObj(parseInt(k) - 1);
   if (k.toLowerCase() === 'r') resetSelected();
+  if (k.toLowerCase() === 'a') resetAll();
 });
 </script>
 </body>
